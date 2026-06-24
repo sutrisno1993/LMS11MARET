@@ -125,6 +125,7 @@ const navigation = [
     label: 'KBM (Kegiatan Belajar Mengajar)',
     items: [
       { href: '/guru/dashboard', icon: '📊', label: 'Dashboard' },
+      { href: '/guru/riwayat-jurnal', icon: '📜', label: 'Riwayat Jurnal Mengajar' },
     ],
   },
   {

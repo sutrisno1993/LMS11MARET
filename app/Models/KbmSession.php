@@ -56,4 +56,9 @@ class KbmSession extends Model
     {
         return $this->belongsTo(Teacher::class, 'id_guru_aktual', 'id_guru');
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(StudentAttendance::class, 'id_kbm_session');
+    }
 }

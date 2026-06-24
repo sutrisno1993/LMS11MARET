@@ -94,6 +94,22 @@ class SiswaController extends Controller
             $session->waktu_scan_masuk = now();
             $session->save();
 
+            // Inisialisasi absensi semua siswa di kelas ini sebagai default HADIR (SYSTEM)
+            $studentsInClass = \App\Models\Student::where('id_kelas', $session->id_kelas)->get();
+            foreach ($studentsInClass as $s) {
+                \App\Models\StudentAttendance::updateOrCreate(
+                    [
+                        'id_kbm_session' => $session->id,
+                        'id_siswa' => $s->id_siswa,
+                    ],
+                    [
+                        'status' => 'HADIR',
+                        'metode' => $s->id_siswa === $siswa->id_siswa ? 'SCAN_QR' : 'SYSTEM',
+                        'waktu_presensi' => $s->id_siswa === $siswa->id_siswa ? now() : null,
+                    ]
+                );
+            }
+
             return response()->json([
                 'message' => 'Berhasil! Kelas ' . ($session->subject->nama_mapel ?? '') . ' resmi dimulai.',
             ]);

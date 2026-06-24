@@ -116,6 +116,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/rapor', [\App\Http\Controllers\AdminConfigController::class, 'rapor'])->name('rapor');
     Route::get('/monitoring-nilai', [\App\Http\Controllers\AdminController::class, 'monitoringNilai'])->name('monitoring-nilai');
     Route::get('/laporan-performa', [\App\Http\Controllers\AdminController::class, 'laporanPerforma'])->name('laporan-performa');
+    Route::get('/jurnal', [\App\Http\Controllers\AdminController::class, 'jurnalIndex'])->name('jurnal.index');
 });
 
 // Guru routes
@@ -125,8 +126,10 @@ Route::middleware(['auth', 'role:TEACHER'])->prefix('guru')->name('guru.')->grou
 
     Route::get('/dashboard', [\App\Http\Controllers\GuruController::class, 'dashboard'])->name('dashboard');
     Route::get('/sesi-kbm/{id}', [\App\Http\Controllers\GuruController::class, 'sesiKbm'])->name('sesi-kbm');
-    Route::post('/kbm/{id_sesi}/mulai', [\App\Http\Controllers\GuruController::class, 'mulaiKbm'])->name('kbm.mulai');
-    Route::post('/kbm/{id_sesi}/selesai', [\App\Http\Controllers\GuruController::class, 'selesaiKbm'])->name('kbm.selesai');
+    Route::post('/sesi-kbm/{id_sesi}/mulai', [\App\Http\Controllers\GuruController::class, 'mulaiKbm'])->name('kbm.mulai');
+    Route::post('/sesi-kbm/{id_sesi}/selesai', [\App\Http\Controllers\GuruController::class, 'selesaiKbm'])->name('kbm.selesai');
+    Route::post('/sesi-kbm/{id_sesi}/presensi', [\App\Http\Controllers\GuruController::class, 'simpanPresensi'])->name('kbm.presensi.store');
+    Route::get('/riwayat-jurnal', [\App\Http\Controllers\GuruController::class, 'riwayatJurnal'])->name('riwayat-jurnal');
     
     // Fitur KBM Tambahan
     Route::get('/pemetaan-materi', [\App\Http\Controllers\GuruController::class, 'pemetaanMateri'])->name('pemetaan-materi');
@@ -176,4 +179,5 @@ Route::middleware(['auth', 'role:STUDENT'])->prefix('siswa')->name('siswa.')->gr
 Route::middleware(['auth', 'role:TEACHER'])->prefix('walikelas')->name('walikelas.')->group(function () {
     Route::get('/dashboard', [WaliKelasController::class, 'dashboard'])->name('dashboard');
     Route::get('/p5-assessment', [WaliKelasController::class, 'p5Assessment'])->name('p5-assessment');
+    Route::get('/jurnal', [WaliKelasController::class, 'jurnalIndex'])->name('jurnal.index');
 });

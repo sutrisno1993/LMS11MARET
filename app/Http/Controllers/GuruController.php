@@ -70,10 +70,30 @@ class GuruController extends Controller
             ->where('id_mapel', $session->id_mapel)
             ->get();
 
+        // Ambil data siswa di kelas ini beserta status absensinya
+        $students = \App\Models\Student::where('id_kelas', $session->id_kelas)
+            ->orderBy('nama_siswa')
+            ->get()
+            ->map(function ($s) use ($id) {
+                $attendance = \App\Models\StudentAttendance::where('id_kbm_session', $id)
+                    ->where('id_siswa', $s->id_siswa)
+                    ->first();
+                
+                return [
+                    'id' => $s->id_siswa,
+                    'nama' => $s->nama_siswa,
+                    'nis' => $s->nis,
+                    'status' => $attendance ? $attendance->status : 'HADIR',
+                    'metode' => $attendance ? $attendance->metode : null,
+                    'waktu' => $attendance && $attendance->waktu_presensi ? $attendance->waktu_presensi->format('H:i') : null,
+                ];
+            });
+
         return Inertia::render('Guru/SesiKBM', [
             'sessionId' => $id,
-            'sessionDb' => $session,
-            'questionBanks' => $questionBanks
+            'session' => $session,
+            'questionBanks' => $questionBanks,
+            'students' => $students
         ]);
     }
 
@@ -235,5 +255,121 @@ class GuruController extends Controller
     public function raporPreview()
     {
         return Inertia::render('Guru/RaporPreview');
+    }
+
+    public function mulaiKbm($id_sesi)
+    {
+        $session = \App\Models\KbmSession::findOrFail($id_sesi);
+        
+        if ($session->status_sesi === 'PENDING') {
+            $session->status_sesi = 'AKTIF';
+            $session->status_guru = 'HADIR';
+            $session->waktu_scan_masuk = now();
+            $session->save();
+
+            // Inisialisasi absensi semua siswa di kelas ini sebagai default HADIR
+            $studentsInClass = \App\Models\Student::where('id_kelas', $session->id_kelas)->get();
+            foreach ($studentsInClass as $s) {
+                \App\Models\StudentAttendance::updateOrCreate(
+                    [
+                        'id_kbm_session' => $session->id,
+                        'id_siswa' => $s->id_siswa,
+                    ],
+                    [
+                        'status' => 'HADIR',
+                        'metode' => 'SYSTEM',
+                        'waktu_presensi' => null,
+                    ]
+                );
+            }
+        }
+
+        return redirect()->route('guru.sesi-kbm', $id_sesi)->with('message', 'Sesi KBM berhasil dimulai.');
+    }
+
+    public function selesaiKbm($id_sesi)
+    {
+        $session = \App\Models\KbmSession::findOrFail($id_sesi);
+        $session->status_sesi = 'SELESAI';
+        $session->waktu_scan_keluar = now();
+        $session->save();
+
+        return redirect()->route('guru.dashboard')->with('message', 'Sesi KBM selesai.');
+    }
+
+    public function simpanPresensi(Request $request, $id_sesi)
+    {
+        $request->validate([
+            'students' => 'required|array',
+            'materi_log' => 'nullable|string|max:255',
+        ]);
+
+        $session = \App\Models\KbmSession::findOrFail($id_sesi);
+        
+        // Simpan materi log ke session
+        if ($request->has('materi_log')) {
+            $session->materi_log = $request->materi_log;
+            $session->save();
+        }
+
+        // Simpan/update presensi siswa
+        foreach ($request->students as $studentData) {
+            \App\Models\StudentAttendance::updateOrCreate(
+                [
+                    'id_kbm_session' => $id_sesi,
+                    'id_siswa' => $studentData['id'],
+                ],
+                [
+                    'status' => $studentData['status'],
+                    'metode' => 'MANUAL_GURU',
+                    'waktu_presensi' => $studentData['status'] === 'HADIR' ? now() : null,
+                ]
+            );
+        }
+
+        return redirect()->back()->with('message', 'Presensi dan Jurnal berhasil disimpan.');
+    }
+
+    public function riwayatJurnal()
+    {
+        $user = Auth::user();
+        
+        // Ambil semua sesi yang diampu guru ini dan sudah SELESAI
+        $sessions = \App\Models\KbmSession::with(['clas', 'subject', 'attendances'])
+            ->where(function($q) use ($user) {
+                $q->where('id_guru_terjadwal', $user->id_guru)
+                  ->orWhere('id_guru_aktual', $user->id_guru);
+            })
+            ->where('status_sesi', 'SELESAI')
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('jam_ke', 'desc')
+            ->get()
+            ->map(function ($session) {
+                $totalSiswa = \App\Models\Student::where('id_kelas', $session->id_kelas)->count();
+                $hadir = $session->attendances->where('status', 'HADIR')->count();
+                $sakit = $session->attendances->where('status', 'SAKIT')->count();
+                $izin = $session->attendances->where('status', 'IZIN')->count();
+                $alpa = $session->attendances->where('status', 'ALPA')->count();
+
+                return [
+                    'id' => $session->id,
+                    'tanggal' => $session->tanggal->format('Y-m-d'),
+                    'kelas' => $session->clas->nama_kelas ?? 'Unknown',
+                    'mapel' => $session->subject->nama_mapel ?? 'Unknown',
+                    'jam_ke' => $session->jam_ke,
+                    'materi_log' => $session->materi_log ?? '-',
+                    'stats' => [
+                        'total' => $totalSiswa,
+                        'hadir' => $hadir,
+                        'sakit' => $sakit,
+                        'izin' => $izin,
+                        'alpa' => $alpa,
+                    ]
+                ];
+            });
+
+        return Inertia::render('Guru/RiwayatJurnal', [
+            'sessions' => $sessions,
+        ]);
     }
 }

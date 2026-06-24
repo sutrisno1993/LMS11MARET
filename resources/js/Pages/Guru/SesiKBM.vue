@@ -7,50 +7,50 @@
     :navigation="navigation"
   >
     <template #topbar-actions>
-      <span class="text-xs font-mono" :class="sessionStatus === 'AKTIF' ? 'text-green-400' : 'text-yellow-400'">
-        {{ sessionStatus === 'AKTIF' ? '🟢 Sesi Tervalidasi' : '🟡 Menunggu Scan Pertama' }}
+      <span class="text-xs font-mono" :class="sessionStatus === 'AKTIF' ? 'text-green-400' : sessionStatus === 'SELESAI' ? 'text-blue-400' : 'text-yellow-400'">
+        {{ sessionStatus === 'AKTIF' ? '🟢 Sesi Aktif' : sessionStatus === 'SELESAI' ? '🔵 Sesi Selesai' : '🟡 Menunggu Scan Pertama' }}
       </span>
     </template>
 
     <div class="grid grid-cols-2 gap-6">
 
-      <!-- ===================== PANEL KIRI: QR ENGINE ===================== -->
+      <!-- ===================== PANEL KIRI: QR ENGINE / JURNAL ===================== -->
       <div class="space-y-5">
 
         <!-- Status Card -->
         <div :class="[
           'rounded-2xl border p-5 transition-all duration-500',
-          sessionStatus === 'AKTIF'
-            ? 'border-green-500/30 bg-green-500/8'
-            : 'border-yellow-500/30 bg-yellow-500/8'
+          sessionStatus === 'AKTIF' ? 'border-green-500/30 bg-green-500/8' :
+          sessionStatus === 'SELESAI' ? 'border-blue-500/30 bg-blue-500/8' :
+          'border-yellow-500/30 bg-yellow-500/8'
         ]">
           <div class="flex items-center gap-3">
             <div :class="[
               'w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0',
-              sessionStatus === 'AKTIF' ? 'bg-green-500/20' : 'bg-yellow-500/20'
+              sessionStatus === 'AKTIF' ? 'bg-green-500/20' :
+              sessionStatus === 'SELESAI' ? 'bg-blue-500/20' :
+              'bg-yellow-500/20'
             ]">
-              {{ sessionStatus === 'AKTIF' ? '✅' : '⏳' }}
+              {{ sessionStatus === 'AKTIF' ? '✅' : sessionStatus === 'SELESAI' ? '✓' : '⏳' }}
             </div>
             <div>
-              <div class="font-bold" :class="sessionStatus === 'AKTIF' ? 'text-green-400' : 'text-yellow-400'">
-                {{ sessionStatus === 'AKTIF' ? 'KELAS AKTIF / VALID' : 'PENDING — Menunggu Scan Pertama' }}
+              <div class="font-bold" :class="sessionStatus === 'AKTIF' ? 'text-green-400' : sessionStatus === 'SELESAI' ? 'text-blue-400' : 'text-yellow-400'">
+                {{ sessionStatus === 'AKTIF' ? 'KELAS AKTIF' : sessionStatus === 'SELESAI' ? 'SESI SELESAI' : 'PENDING — Menunggu Scan' }}
               </div>
               <div class="text-xs text-slate-500 mt-0.5">
-                {{ sessionStatus === 'AKTIF'
-                  ? `${firstScanTime} — Divalidasi oleh ${firstScanStudent}`
-                  : 'Minta 1 siswa untuk scan QR Code agar sesi dikonfirmasi'
-                }}
+                {{ sessionStatus === 'AKTIF' ? 'Pembelajaran sedang berlangsung. Absensi default hadir.' : 
+                   sessionStatus === 'SELESAI' ? 'Pertemuan kelas ini sudah selesai dideklarasikan.' :
+                   'Minta salah satu perwakilan siswa untuk scan QR Code agar sesi aktif.' }}
               </div>
             </div>
           </div>
         </div>
 
-        <!-- QR Code Container -->
-        <div class="rounded-2xl border border-white/8 p-7 text-center" style="background: var(--card)">
+        <!-- QR Code Container (hanya jika PENDING) -->
+        <div v-if="sessionStatus === 'PENDING'" class="rounded-2xl border border-white/8 p-7 text-center" style="background: var(--card)">
           <div class="text-sm font-bold mb-1">QR Code Absensi</div>
-          <div class="text-xs text-slate-500 mb-5">Token berputar otomatis setiap 15 menit</div>
+          <div class="text-xs text-slate-500 mb-5">Gunakan QR ini untuk mengaktifkan sesi kelas</div>
 
-          <!-- QR + Countdown ring -->
           <div class="relative inline-block">
             <!-- SVG Countdown ring -->
             <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 200 200"
@@ -71,43 +71,34 @@
             <!-- QR Code box -->
             <div class="relative w-48 h-48 mx-auto rounded-2xl bg-white flex items-center justify-center shadow-2xl shadow-indigo-500/20"
                  style="width:200px;height:200px;">
-              <!-- Simulated QR grid -->
-              <div class="grid gap-0.5 p-3" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:12px;">
-                <div v-for="i in 49" :key="i"
-                     :class="['rounded-sm', qrPattern[i % qrPattern.length] ? 'bg-gray-900' : 'bg-transparent']"
-                     style="width:18px;height:18px;">
-                </div>
-              </div>
-              <!-- Corner markers -->
-              <div class="absolute top-2.5 left-2.5 w-8 h-8 border-4 border-gray-900 rounded"></div>
-              <div class="absolute top-2.5 right-2.5 w-8 h-8 border-4 border-gray-900 rounded"></div>
-              <div class="absolute bottom-2.5 left-2.5 w-8 h-8 border-4 border-gray-900 rounded"></div>
-              <div class="absolute top-4 left-4 w-4 h-4 bg-gray-900 rounded-sm"></div>
-              <div class="absolute top-4 right-4 w-4 h-4 bg-gray-900 rounded-sm"></div>
-              <div class="absolute bottom-4 left-4 w-4 h-4 bg-gray-900 rounded-sm"></div>
-
-              <!-- Scanning line animation -->
-              <div class="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-80"
-                   :style="`top: ${scanLineY}%;transition: top 0.05s linear;`"></div>
+              <QrcodeVue :value="qrPayload" :size="170" level="H" render-as="svg" />
             </div>
           </div>
 
           <!-- Countdown display -->
           <div class="mt-6">
-            <div class="text-3xl font-black font-mono tabular-nums"
-                 :class="countdownSecs < 60 ? 'text-red-400' : countdownSecs < 180 ? 'text-yellow-400' : 'text-indigo-400'">
+            <div class="text-3xl font-black font-mono tabular-nums text-indigo-400">
               {{ countdownDisplay }}
             </div>
             <div class="text-xs text-slate-500 mt-1">Token kedaluwarsa dalam</div>
           </div>
+        </div>
 
-          <!-- Refresh button (manual) -->
-          <button
-            @click="refreshToken"
-            :disabled="isRefreshing"
-            class="mt-4 px-4 py-2 rounded-lg border border-white/10 text-xs text-slate-400 hover:text-white hover:border-white/25 transition-colors disabled:opacity-40">
-            {{ isRefreshing ? '🔄 Memperbarui...' : '🔄 Perbarui Token Sekarang' }}
-          </button>
+        <!-- Jurnal Pembelajaran (Hanya tampil jika AKTIF) -->
+        <div v-if="sessionStatus === 'AKTIF'" class="rounded-2xl border border-white/8 p-5 space-y-4" style="background: var(--card)">
+          <div>
+            <h3 class="text-sm font-bold text-white">Jurnal Pembelajaran Harian</h3>
+            <p class="text-[10px] text-slate-500 mt-0.5">Catat ringkasan materi pembelajaran pertemuan tatap muka hari ini.</p>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Ringkasan Materi / Catatan KBM</label>
+            <textarea
+              v-model="materiLog"
+              rows="4"
+              placeholder="Contoh: Belajar dasar routing statik dan konfigurasi IP Address di router Cisco..."
+              class="w-full bg-white/5 border border-white/8 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-indigo-500/50 resize-none transition-colors"
+            ></textarea>
+          </div>
         </div>
 
         <!-- Session Info -->
@@ -167,22 +158,26 @@
         <div class="rounded-2xl border border-white/8 overflow-hidden" style="background: var(--card)">
           <div class="flex items-center justify-between px-5 py-4 border-b border-white/8">
             <div>
-              <div class="font-bold text-sm">Daftar Siswa</div>
+              <div class="font-bold text-sm">Daftar Kehadiran Siswa</div>
               <div class="text-xs text-slate-500">{{ session?.kelas }} — {{ students.length }} siswa</div>
             </div>
             <!-- Manual absensi hanya aktif setelah sesi AKTIF -->
-            <div v-if="sessionStatus !== 'AKTIF'"
+            <div v-if="sessionStatus === 'PENDING'"
                  class="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-1.5 rounded-lg">
               🔒 Tunggu scan pertama
             </div>
-            <div v-else class="text-[10px] text-green-400">
-              ✅ Absensi manual terbuka
+            <div v-else-if="sessionStatus === 'SELESAI'"
+                 class="text-[10px] text-slate-400 bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-lg">
+              🔒 Sesi Selesai (Read-only)
+            </div>
+            <div v-else class="text-[10px] text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1.5 rounded-lg font-semibold">
+              ✓ Klik Status untuk Mengubah
             </div>
           </div>
 
           <!-- Filter tabs -->
           <div class="flex border-b border-white/8">
-            <button v-for="tab in ['Semua', 'Hadir', 'Belum']" :key="tab"
+            <button v-for="tab in ['Semua', 'Hadir', 'Izin', 'Sakit', 'Alpa']" :key="tab"
                     @click="activeTab = tab"
                     :class="[
                       'flex-1 py-2.5 text-xs font-semibold transition-colors',
@@ -205,59 +200,75 @@
           </div>
 
           <!-- Students -->
-          <div class="overflow-y-auto" style="max-height: 420px;">
+          <div class="overflow-y-auto" style="max-height: 400px;">
             <div v-for="siswa in filteredStudents" :key="siswa.id"
-                 class="flex items-center gap-3 px-4 py-3 border-b border-white/4 hover:bg-white/2 transition-colors">
+                 class="flex items-center justify-between px-4 py-3.5 border-b border-white/4 hover:bg-white/2 transition-colors">
 
-              <!-- Avatar -->
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                   :class="siswa.status === 'HADIR' ? 'bg-green-500/20 text-green-400' : 'bg-white/8 text-slate-500'">
-                {{ siswa.nama.split(' ').map(w=>w[0]).slice(0,2).join('') }}
+              <div class="flex items-center gap-3 min-w-0">
+                <!-- Avatar -->
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                     :class="[
+                       siswa.status === 'HADIR' ? 'bg-green-500/10 text-green-400' :
+                       siswa.status === 'IZIN' ? 'bg-blue-500/10 text-blue-400' :
+                       siswa.status === 'SAKIT' ? 'bg-amber-500/10 text-amber-400' :
+                       'bg-red-500/10 text-red-400'
+                     ]">
+                  {{ siswa.nama.split(' ').map(w=>w[0]).slice(0,2).join('') }}
+                </div>
+
+                <!-- Name + NIS -->
+                <div class="min-w-0">
+                  <div class="text-xs font-semibold truncate">{{ siswa.nama }}</div>
+                  <div class="text-[10px] text-slate-600">{{ siswa.nis }}</div>
+                </div>
               </div>
 
-              <!-- Name + NIS -->
-              <div class="flex-1 min-w-0">
-                <div class="text-xs font-semibold truncate">{{ siswa.nama }}</div>
-                <div class="text-[10px] text-slate-600">{{ siswa.nis }}</div>
-              </div>
-
-              <!-- Metode badge (jika sudah hadir) -->
-              <div v-if="siswa.status === 'HADIR'" class="text-right">
-                <div class="badge-hadir text-[10px]">{{ siswa.metode === 'SCAN_QR' ? '📱 QR' : '✋ Manual' }}</div>
-                <div class="text-[10px] text-slate-600 mt-0.5">{{ siswa.waktu }}</div>
-              </div>
-
-              <!-- Manual action (hanya jika sesi AKTIF dan siswa belum hadir) -->
-              <div v-else-if="sessionStatus === 'AKTIF'" class="flex items-center gap-1.5 flex-shrink-0">
-                <select
-                  v-model="siswa.statusPilihan"
-                  class="bg-white/6 border border-white/12 rounded-lg px-2 py-1.5 text-[11px] text-slate-300 outline-none focus:border-indigo-500/50"
-                  :disabled="siswa.status === 'HADIR'">
-                  <option value="ALPA">Alpa</option>
-                  <option value="IZIN">Izin</option>
-                  <option value="SAKIT">Sakit</option>
-                </select>
+              <!-- Clickable Badge Action -->
+              <div>
                 <button
-                  @click="absenManual(siswa)"
-                  class="w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs flex items-center justify-center transition-colors">
-                  ✓
+                  @click="toggleStatus(siswa)"
+                  :disabled="sessionStatus !== 'AKTIF'"
+                  class="px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all duration-150 flex items-center gap-1.5 select-none"
+                  :class="[
+                    siswa.status === 'HADIR' ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25' :
+                    siswa.status === 'IZIN' ? 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25' :
+                    siswa.status === 'SAKIT' ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25' :
+                    'bg-red-500/15 text-red-400 hover:bg-red-500/25',
+                    sessionStatus === 'AKTIF' ? 'cursor-pointer hover:scale-[1.03] active:scale-[0.97]' : 'cursor-default'
+                  ]"
+                >
+                  <span>{{ statusLabel(siswa.status) }}</span>
+                  <span v-if="siswa.status === 'HADIR' && siswa.metode" class="text-[9px] opacity-75 font-normal">
+                    ({{ siswa.metode === 'SCAN_QR' ? '📱 QR' : '✋ Manual' }})
+                  </span>
                 </button>
               </div>
 
-              <!-- Locked state -->
-              <div v-else class="text-slate-700 text-sm">—</div>
+            </div>
 
+            <!-- Empty state -->
+            <div v-if="filteredStudents.length === 0" class="py-10 text-center text-xs text-slate-500">
+              Tidak ada siswa dengan filter ini
             </div>
           </div>
         </div>
 
-        <!-- Save all button -->
-        <button
-          v-if="sessionStatus === 'AKTIF'"
-          class="w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all hover:-translate-y-0.5"
-          style="background: linear-gradient(135deg, #22C55E, #16A34A); box-shadow: 0 8px 20px rgba(34,197,94,0.3);">
-          💾 Simpan Semua Presensi
-        </button>
+        <!-- Action Buttons -->
+        <div v-if="sessionStatus === 'AKTIF'" class="space-y-3">
+          <button
+            @click="saveAttendance"
+            :disabled="isSaving"
+            class="w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            style="background: linear-gradient(135deg, #22C55E, #16A34A); box-shadow: 0 8px 20px rgba(34,197,94,0.3);">
+            {{ isSaving ? '⏳ Menyimpan...' : '💾 Simpan Presensi & Jurnal' }}
+          </button>
+          
+          <button
+            @click="akhiriKbm"
+            class="w-full py-3.5 rounded-xl font-bold text-sm text-red-400 border border-red-500/30 hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2">
+            🛑 Akhiri Sesi KBM (Selesai)
+          </button>
+        </div>
 
       </div>
     </div>
@@ -266,8 +277,9 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import QrcodeVue from 'qrcode.vue';
 
 const props = defineProps({ 
   sessionId: [String, Number], 
@@ -277,10 +289,10 @@ const props = defineProps({
 });
 
 // ---- Session state ----
-const sessionStatus = ref('PENDING'); // PENDING | AKTIF
-const firstScanTime = ref('07:47');
-const firstScanStudent = ref('Ahmad Rifai');
+const sessionStatus = ref(props.session?.status_sesi || 'PENDING'); 
 const isRefreshing = ref(false);
+const isSaving = ref(false);
+const materiLog = ref(props.session?.materi_log || '');
 
 const selectedBankId = ref('');
 const launchExam = () => {
@@ -291,33 +303,18 @@ const launchExam = () => {
   });
 };
 
+// ---- QR Code Payload ----
+const qrPayload = ref('');
+const generateQrPayload = () => {
+  return JSON.stringify({
+    id_kbm_session: props.sessionId,
+    timestamp: Date.now()
+  });
+};
+
 // ---- QR Countdown (900 detik = 15 menit) ----
-const countdownSecs = ref(785);
+const countdownSecs = ref(900);
 let countdownTimer;
-
-onMounted(() => {
-  // Simulasi: setelah 3 detik, langsung AKTIF untuk demo
-  setTimeout(() => sessionStatus.value = 'AKTIF', 3000);
-
-  countdownTimer = setInterval(() => {
-    if (countdownSecs.value > 0) {
-      countdownSecs.value--;
-    } else {
-      countdownSecs.value = 900;
-      refreshToken();
-    }
-  }, 1000);
-
-  // Animate scan line
-  scanLineInterval = setInterval(() => {
-    scanLineY.value = (scanLineY.value + 0.8) % 100;
-  }, 30);
-});
-
-onUnmounted(() => {
-  clearInterval(countdownTimer);
-  clearInterval(scanLineInterval);
-});
 
 const countdownDisplay = computed(() => {
   const m = Math.floor(countdownSecs.value / 60);
@@ -326,66 +323,92 @@ const countdownDisplay = computed(() => {
 });
 const countdownPct = computed(() => (countdownSecs.value / 900) * 100);
 
-// Scan line animation
-const scanLineY = ref(0);
-let scanLineInterval;
+let statusPollingInterval = null;
 
-// QR pattern for visual (purely decorative)
-const qrPattern = [1,0,1,1,0,0,1,0,1,0,1,1,0,1,1,0,0,1,0,0,1,1,0,1,0,1,0,0,1,1,0,0,1,1,0,1,0,1,1,0,0,1,1,1,0,1,0,0,1];
+onMounted(() => {
+  if (sessionStatus.value === 'PENDING') {
+    qrPayload.value = generateQrPayload();
+    countdownTimer = setInterval(() => {
+      if (countdownSecs.value > 0) {
+        countdownSecs.value--;
+      } else {
+        countdownSecs.value = 900;
+        qrPayload.value = generateQrPayload();
+      }
+    }, 1000);
 
-const refreshToken = () => {
-  isRefreshing.value = true;
-  // In real app: axios.post(`/guru/sesi-kbm/${props.sessionId}/refresh-token`)
-  setTimeout(() => {
-    isRefreshing.value = false;
-    countdownSecs.value = 900;
-  }, 1200);
-};
-
-// ---- Session info ----
-const session = ref(props.session || {
-  mapel: 'Dasar-Dasar Jaringan Komputer',
-  kelas: 'XII TKJ 1',
-  ruang: 'Lab TKJ',
-  jamMulai: '07:45',
-  jamSelesai: '09:15',
-  tanggal: 'Sabtu, 21 Juni 2026',
-  statusGuru: 'HADIR',
-  waktuMulai: '07:47',
+    // Polling untuk mendeteksi scan QR dari perwakilan kelas
+    statusPollingInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/guru/kbm-status/${props.sessionId}`);
+        const data = await res.json();
+        if (data.status_sesi === 'AKTIF') {
+          clearInterval(statusPollingInterval);
+          router.reload({
+            onSuccess: () => {
+              sessionStatus.value = 'AKTIF';
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Polling error:', e);
+      }
+    }, 3000);
+  }
 });
 
+onUnmounted(() => {
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (statusPollingInterval) clearInterval(statusPollingInterval);
+});
+
+// ---- Session info ----
 const sessionInfo = computed(() => [
-  { label: 'Mata Pelajaran', value: session.value.mapel },
-  { label: 'Kelas', value: session.value.kelas },
-  { label: 'Jam Pelajaran', value: `${session.value.jamMulai} – ${session.value.jamSelesai}` },
-  { label: 'Status Guru', value: session.value.statusGuru, color: session.value.statusGuru === 'HADIR' ? 'text-green-400' : session.value.statusGuru === 'TERLAMBAT' ? 'text-yellow-400' : 'text-red-400' },
-  { label: 'Waktu Aktivasi', value: session.value.waktuMulai },
-  { label: 'Tanggal', value: session.value.tanggal },
+  { label: 'Mata Pelajaran', value: props.session?.subject?.nama_mapel || '-' },
+  { label: 'Kelas', value: props.session?.clas?.nama_kelas || '-' },
+  { label: 'Jam Pelajaran', value: `Jam ke-${props.session?.jam_ke || '-'}` },
+  { label: 'Status Guru', value: props.session?.status_guru || 'PENDING', color: props.session?.status_guru === 'HADIR' ? 'text-green-400' : props.session?.status_guru === 'TERLAMBAT' ? 'text-yellow-400' : 'text-red-400' },
+  { label: 'Tanggal', value: props.session?.tanggal ? new Date(props.session.tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '-' },
+  { label: 'Waktu Aktif', value: props.session?.waktu_scan_masuk ? new Date(props.session.waktu_scan_masuk).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-' },
 ]);
 
 // ---- Students ----
 const activeTab = ref('Semua');
 const searchQuery = ref('');
 
-const students = ref(props.students || [
-  { id: 1, nama: 'Ahmad Rifai', nis: '2024001', status: 'HADIR', metode: 'SCAN_QR', waktu: '07:47', statusPilihan: 'ALPA' },
-  { id: 2, nama: 'Budi Santoso', nis: '2024002', status: 'HADIR', metode: 'SCAN_QR', waktu: '07:48', statusPilihan: 'ALPA' },
-  { id: 3, nama: 'Citra Dewi', nis: '2024003', status: 'HADIR', metode: 'MANUAL_GURU', waktu: '07:50', statusPilihan: 'ALPA' },
-  { id: 4, nama: 'Dian Pratama', nis: '2024004', status: null, metode: null, waktu: null, statusPilihan: 'ALPA' },
-  { id: 5, nama: 'Eka Rahayu', nis: '2024005', status: null, metode: null, waktu: null, statusPilihan: 'IZIN' },
-  { id: 6, nama: 'Farhan Maulana', nis: '2024006', status: null, metode: null, waktu: null, statusPilihan: 'ALPA' },
-  { id: 7, nama: 'Gita Novia', nis: '2024007', status: 'HADIR', metode: 'SCAN_QR', waktu: '07:49', statusPilihan: 'ALPA' },
-  { id: 8, nama: 'Hendra Wijaya', nis: '2024008', status: null, metode: null, waktu: null, statusPilihan: 'SAKIT' },
-  { id: 9, nama: 'Intan Permata', nis: '2024009', status: 'HADIR', metode: 'SCAN_QR', waktu: '07:51', statusPilihan: 'ALPA' },
-  { id: 10, nama: 'Joko Susilo', nis: '2024010', status: null, metode: null, waktu: null, statusPilihan: 'ALPA' },
-  { id: 11, nama: 'Kartika Sari', nis: '2024011', status: 'HADIR', metode: 'SCAN_QR', waktu: '07:52', statusPilihan: 'ALPA' },
-  { id: 12, nama: 'Luthfi Hakim', nis: '2024012', status: null, metode: null, waktu: null, statusPilihan: 'ALPA' },
-]);
+const students = ref(props.students?.map(s => ({
+  ...s,
+  status: s.status || 'HADIR',
+  metode: s.metode,
+  waktu: s.waktu,
+})) || []);
+
+// Sinkronisasi data ketika props berubah (misal setelah scan/reload)
+watch(() => props.students, (newVal) => {
+  if (newVal) {
+    students.value = newVal.map(s => ({
+      ...s,
+      status: s.status || 'HADIR',
+      metode: s.metode,
+      waktu: s.waktu,
+    }));
+  }
+}, { deep: true });
+
+watch(() => props.session, (newVal) => {
+  if (newVal) {
+    sessionStatus.value = newVal.status_sesi || 'PENDING';
+    materiLog.value = newVal.materi_log || '';
+  }
+}, { deep: true });
 
 const filteredStudents = computed(() => {
   let list = students.value;
   if (activeTab.value === 'Hadir') list = list.filter(s => s.status === 'HADIR');
-  if (activeTab.value === 'Belum') list = list.filter(s => s.status !== 'HADIR');
+  if (activeTab.value === 'Izin') list = list.filter(s => s.status === 'IZIN');
+  if (activeTab.value === 'Sakit') list = list.filter(s => s.status === 'SAKIT');
+  if (activeTab.value === 'Alpa') list = list.filter(s => s.status === 'ALPA');
+  
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     list = list.filter(s => s.nama.toLowerCase().includes(q) || s.nis.includes(q));
@@ -395,16 +418,65 @@ const filteredStudents = computed(() => {
 
 const attendanceSummary = computed(() => [
   { label: 'Hadir', count: students.value.filter(s => s.status === 'HADIR').length, color: '#22C55E' },
-  { label: 'Alpa', count: students.value.filter(s => !s.status).length, color: '#EF4444' },
-  { label: 'Izin', count: students.value.filter(s => s.statusPilihan === 'IZIN' && !s.status).length, color: '#3B82F6' },
-  { label: 'Sakit', count: students.value.filter(s => s.statusPilihan === 'SAKIT' && !s.status).length, color: '#F59E0B' },
+  { label: 'Izin', count: students.value.filter(s => s.status === 'IZIN').length, color: '#3B82F6' },
+  { label: 'Sakit', count: students.value.filter(s => s.status === 'SAKIT').length, color: '#F59E0B' },
+  { label: 'Alpa', count: students.value.filter(s => s.status === 'ALPA').length, color: '#EF4444' },
 ]);
 
-const absenManual = (siswa) => {
-  siswa.status = 'HADIR';
-  siswa.metode = 'MANUAL_GURU';
-  siswa.waktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-  // router.post(...)
+const statusLabel = (s) => {
+  return {
+    'HADIR': 'Hadir',
+    'IZIN': 'Izin',
+    'SAKIT': 'Sakit',
+    'ALPA': 'Alpa'
+  }[s] || 'Hadir';
+};
+
+const toggleStatus = (siswa) => {
+  if (sessionStatus.value !== 'AKTIF') return;
+  const statusCycle = {
+    'HADIR': 'IZIN',
+    'IZIN': 'SAKIT',
+    'SAKIT': 'ALPA',
+    'ALPA': 'HADIR'
+  };
+  siswa.status = statusCycle[siswa.status] || 'HADIR';
+  
+  if (siswa.status === 'HADIR') {
+    siswa.metode = 'MANUAL_GURU';
+    siswa.waktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  } else {
+    siswa.metode = null;
+    siswa.waktu = null;
+  }
+};
+
+const saveAttendance = () => {
+  isSaving.value = true;
+  router.post(`/guru/sesi-kbm/${props.sessionId}/presensi`, {
+    students: students.value,
+    materi_log: materiLog.value
+  }, {
+    preserveState: true,
+    preserveScroll: true,
+    onFinish: () => {
+      isSaving.value = false;
+    }
+  });
+};
+
+const akhiriKbm = () => {
+  if (confirm('Apakah Anda yakin ingin menyelesaikan sesi KBM ini? Data presensi dan jurnal yang belum disimpan otomatis tersimpan.')) {
+    // Simpan dahulu untuk memastikan data terbaru terkirim
+    router.post(`/guru/sesi-kbm/${props.sessionId}/presensi`, {
+      students: students.value,
+      materi_log: materiLog.value
+    }, {
+      onSuccess: () => {
+        router.post(`/guru/sesi-kbm/${props.sessionId}/selesai`);
+      }
+    });
+  }
 };
 
 const navigation = [
@@ -412,6 +484,7 @@ const navigation = [
     label: 'KBM (Kegiatan Belajar Mengajar)',
     items: [
       { href: '/guru/dashboard', icon: '📊', label: 'Dashboard' },
+      { href: '/guru/riwayat-jurnal', icon: '📜', label: 'Riwayat Jurnal Mengajar' },
     ],
   },
   {
@@ -426,3 +499,10 @@ const navigation = [
   },
 ];
 </script>
+
+<style scoped>
+@keyframes shimmer {
+  0% { transform: skewX(-12deg) translateX(-200%); }
+  100% { transform: skewX(-12deg) translateX(200%); }
+}
+</style>

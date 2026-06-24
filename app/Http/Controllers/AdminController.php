@@ -582,4 +582,129 @@ class AdminController extends Controller
             'selectedYear' => $year,
         ]);
     }
+
+    /**
+     * Jurnal Tatap Muka Harian & Riwayat Timeline KBM
+     */
+    public function jurnalIndex(Request $request)
+    {
+        $semester = $request->input('semester', 'GANJIL'); // GANJIL = Jul-Des, GENAP = Jan-Jun
+        $year = $request->input('year', date('Y'));
+        $id_kelas = $request->input('id_kelas');
+        $id_guru = $request->input('id_guru');
+        $id_mapel = $request->input('id_mapel');
+
+        // Tentukan rentang tanggal berdasarkan semester
+        if ($semester === 'GANJIL') {
+            $startDate = \Carbon\Carbon::createFromDate($year, 7, 1)->startOfMonth()->toDateString();
+            $endDate = \Carbon\Carbon::createFromDate($year, 12, 31)->endOfMonth()->toDateString();
+        } else {
+            $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfMonth()->toDateString();
+            $endDate = \Carbon\Carbon::createFromDate($year, 6, 30)->endOfMonth()->toDateString();
+        }
+
+        // Ambil semua guru untuk filter dan statistik
+        $teachers = \App\Models\Teacher::orderBy('nama_guru')->get();
+        $classes = \App\Models\Clas::orderBy('nama_kelas')->get();
+        $subjects = \App\Models\Subject::orderBy('nama_mapel')->get();
+
+        // Query semua sesi KBM dalam rentang semester/tahun ini untuk hitung statistik kehadiran guru
+        $sessionsAll = \App\Models\KbmSession::whereBetween('tanggal', [$startDate, $endDate])->get();
+
+        $teacherStats = $teachers->map(function ($teacher) use ($sessionsAll) {
+            $sessions = $sessionsAll->filter(function($s) use ($teacher) {
+                return $s->id_guru_terjadwal == $teacher->id_guru || $s->id_guru_aktual == $teacher->id_guru;
+            });
+            $total = $sessions->count();
+            $hadir = $sessions->whereIn('status_guru', ['HADIR', 'TERLAMBAT'])->count();
+            $alpa = $sessions->where('status_guru', 'ALPA')->count();
+            $pending = $sessions->where('status_guru', 'PENDING')->count();
+
+            return [
+                'id_guru' => $teacher->id_guru,
+                'nama_guru' => $teacher->nama_guru,
+                'total_sesi' => $total,
+                'hadir' => $hadir,
+                'alpa' => $alpa,
+                'pending' => $pending,
+                'persentase_kehadiran' => $total > 0 ? round(($hadir / $total) * 100, 1) : 100,
+            ];
+        });
+
+        // Query timeline KBM
+        $query = \App\Models\KbmSession::with(['clas', 'subject', 'guruAktual', 'guruTerjadwal', 'attendances.student'])
+            ->whereBetween('tanggal', [$startDate, $endDate]);
+
+        if ($id_kelas) {
+            $query->where('id_kelas', $id_kelas);
+        }
+
+        if ($id_guru) {
+            $query->where(function($q) use ($id_guru) {
+                $q->where('id_guru_terjadwal', $id_guru)
+                  ->orWhere('id_guru_aktual', $id_guru);
+            });
+        }
+
+        if ($id_mapel) {
+            $query->where('id_mapel', $id_mapel);
+        }
+
+        $sessions = $query->orderBy('tanggal', 'desc')
+            ->orderBy('jam_ke', 'desc')
+            ->get()
+            ->map(function($session) {
+                $totalSiswa = \App\Models\Student::where('id_kelas', $session->id_kelas)->count();
+                $hadir = $session->attendances->where('status', 'HADIR')->count();
+                $sakit = $session->attendances->where('status', 'SAKIT')->count();
+                $izin = $session->attendances->where('status', 'IZIN')->count();
+                $alpa = $session->attendances->where('status', 'ALPA')->count();
+
+                $details = $session->attendances->map(function($att) {
+                    return [
+                        'nama' => $att->student->nama_siswa ?? 'Unknown',
+                        'nis' => $att->student->nis ?? '-',
+                        'status' => $att->status,
+                        'waktu' => $att->waktu_presensi ? $att->waktu_presensi->format('H:i') : '-',
+                        'metode' => $att->metode,
+                    ];
+                })->sortBy('nama')->values();
+
+                return [
+                    'id' => $session->id,
+                    'tanggal' => $session->tanggal->format('Y-m-d'),
+                    'kelas' => $session->clas->nama_kelas ?? 'Unknown',
+                    'mapel' => $session->subject->nama_mapel ?? 'Unknown',
+                    'guru' => $session->guruAktual->nama_guru ?? $session->guruTerjadwal->nama_guru ?? 'Unknown',
+                    'jam_ke' => $session->jam_ke,
+                    'status_sesi' => $session->status_sesi,
+                    'status_guru' => $session->status_guru,
+                    'materi_log' => $session->materi_log ?? '-',
+                    'scan_masuk' => $session->waktu_scan_masuk ? $session->waktu_scan_masuk->format('H:i') : '-',
+                    'stats' => [
+                        'total' => $totalSiswa,
+                        'hadir' => $hadir,
+                        'sakit' => $sakit,
+                        'izin' => $izin,
+                        'alpa' => $alpa,
+                    ],
+                    'details' => $details,
+                ];
+            });
+
+        return Inertia::render('Admin/Jurnal/Index', [
+            'sessions' => $sessions,
+            'classes' => $classes,
+            'teachers' => $teachers,
+            'subjects' => $subjects,
+            'teacherStats' => $teacherStats,
+            'filters' => [
+                'year' => (int)$year,
+                'semester' => $semester,
+                'id_kelas' => $id_kelas ? (int)$id_kelas : null,
+                'id_guru' => $id_guru ? (int)$id_guru : null,
+                'id_mapel' => $id_mapel ? (int)$id_mapel : null,
+            ]
+        ]);
+    }
 }

@@ -34,8 +34,57 @@ class EnsureDailyKbmGenerated
                 $endOfDay = Carbon::today()->endOfDay();
                 Cache::put($cacheKey, true, $endOfDay);
             }
+
+            // Jalankan pengecekan ALPA Guru secara real-time
+            $this->checkTeacherAlpa($today);
         }
 
         return $next($request);
+    }
+
+    /**
+     * Periksa sesi KBM PENDING yang sudah lewat waktu selesainya, lalu tandai Guru sebagai ALPA
+     */
+    private function checkTeacherAlpa($today)
+    {
+        $now = Carbon::now();
+        $nowTime = $now->toTimeString();
+        $dayIndex = $now->dayOfWeek;
+        $days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        $hariEnum = strtoupper($days[$dayIndex]);
+
+        // 1. Sesi KBM hari-hari sebelumnya yang masih PENDING otomatis menjadi KOSONG & ALPA
+        \App\Models\KbmSession::where('tanggal', '<', $today)
+            ->where('status_sesi', 'PENDING')
+            ->update([
+                'status_sesi' => 'KOSONG',
+                'status_guru' => 'ALPA'
+            ]);
+
+        // 2. Sesi KBM hari ini yang sudah lewat jam selesainya tapi masih PENDING otomatis ALPA
+        if ($hariEnum !== 'MINGGU') {
+            $pendingToday = \App\Models\KbmSession::with(['clas'])
+                ->where('tanggal', $today)
+                ->where('status_sesi', 'PENDING')
+                ->get();
+
+            foreach ($pendingToday as $session) {
+                if ($session->clas) {
+                    $shift = $session->clas->shift_operasional;
+                    $jp = \App\Models\JpSchedule::where('hari', $hariEnum)
+                        ->where('shift', $shift)
+                        ->where('jam_ke', $session->jam_ke)
+                        ->first();
+
+                    if ($jp && $jp->waktu_selesai) {
+                        if ($nowTime > $jp->waktu_selesai) {
+                            $session->status_sesi = 'KOSONG';
+                            $session->status_guru = 'ALPA';
+                            $session->save();
+                        }
+                    }
+                }
+            }
+        }
     }
 }

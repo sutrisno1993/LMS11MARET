@@ -134,6 +134,7 @@ const navigation = [
     label: 'Perwalian',
     items: [
       { href: '/walikelas/dashboard', icon: '🏠', label: 'Dashboard Kelas' },
+      { href: '/walikelas/jurnal', icon: '📓', label: 'Jurnal KBM Kelas' },
       { href: '/walikelas/p5-assessment', icon: '🌱', label: 'Asesmen P5' },
     ],
   },

@@ -57,6 +57,7 @@ const navigation = [
       { href: '/admin/monitoring-nilai', icon: '📈', label: 'Monitoring Nilai' },
       { href: '/admin/rapor', icon: '📋', label: 'Ekspor Rapor' },
       { href: '/admin/laporan-performa', icon: '🏆', label: 'Laporan Performa' },
+      { href: '/admin/jurnal', icon: '📓', label: 'Jurnal Tatap Muka' },
     ],
   }
 ];
