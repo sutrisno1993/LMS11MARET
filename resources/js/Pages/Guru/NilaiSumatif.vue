@@ -3,13 +3,13 @@
 
   <AppLayout
     title="Nilai Sumatif (Grid Assessment)"
-    subtitle="Input nilai siswa berdasarkan Tujuan Pembelajaran (TP) yang telah dipetakan"
+    subtitle="Input nilai siswa berdasarkan Bab / Materi Pembelajaran yang telah dipetakan"
     :navigation="navigation"
   >
     <template #topbar-actions>
       <div class="flex items-center gap-2 mr-4">
         <label class="text-xs text-slate-500 font-semibold uppercase">Pilih Kelas:</label>
-        <select v-model="filterForm.id_kelas" class="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-indigo-500">
+        <select v-model="filterForm.id_kelas" class="bg-[#111827] border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-indigo-500">
           <option v-for="kelas in kelasList" :key="kelas.id_kelas" :value="kelas.id_kelas">
             {{ kelas.nama_kelas }}
           </option>
@@ -30,7 +30,7 @@
         <div class="flex gap-4">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Mata Pelajaran</label>
-            <select v-model="filterForm.id_mapel" class="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-indigo-500">
+            <select v-model="filterForm.id_mapel" class="bg-[#111827] border border-white/10 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-indigo-500">
               <option v-for="mapel in mapelList" :key="mapel.id_mapel" :value="mapel.id_mapel">
                 {{ mapel.nama_mapel }}
               </option>
@@ -53,8 +53,8 @@
               <tr class="bg-white/4 border-b border-white/8">
                 <th rowspan="2" class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 w-12 text-center">No</th>
                 <th rowspan="2" class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 w-64">Nama Siswa</th>
-                <th :colspan="tpList.length" class="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center bg-indigo-500/10">
-                  Nilai Tujuan Pembelajaran (TP)
+                <th :colspan="allTopics.length" class="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center bg-indigo-500/10">
+                  Nilai Sumatif per Materi / Bab
                 </th>
                 <th rowspan="2" class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 w-24 text-center">
                   Nilai Rata-rata<br/>Elemen
@@ -63,18 +63,25 @@
                   Catatan Formatif<br/><span class="text-[9px] font-normal text-slate-500">(Opsional/Diferensiasi)</span>
                 </th>
               </tr>
-              <!-- Header Baris 2: Sub-kolom TP -->
+              <!-- Header Baris 2: Sub-kolom Materi/Bab -->
               <tr class="bg-white/2 border-b border-white/8">
-                <th v-for="(tp, idx) in tpList" :key="tp.id_tp"
-                    class="px-3 py-2 text-[10px] font-bold text-slate-300 border-r border-white/8 w-24 text-center cursor-help"
-                    :title="tp.deskripsi_tp">
-                  {{ tp.kode_tp }}
-                  <div class="text-[9px] text-slate-500 font-normal mt-0.5 truncate w-20">{{ tp.deskripsi_tp }}</div>
+                <th v-for="topic in allTopics" :key="topic.id_topic"
+                    class="px-3 py-2 text-[10px] font-bold text-slate-300 border-r border-white/8 w-36 text-center cursor-help"
+                    :title="topic.deskripsi_tp">
+                  <span class="text-[9px] text-indigo-400 font-mono">[{{ topic.kode_tp }}]</span>
+                  <div class="text-[10px] text-white font-semibold mt-0.5 truncate w-32 mx-auto">{{ topic.nama_topik }}</div>
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(siswa, sIdx) in formNilai.students" :key="siswa.id"
+              <!-- Jika Belum ada Materi -->
+              <tr v-if="allTopics.length === 0">
+                <td :colspan="4" class="px-4 py-8 text-center text-xs text-slate-500">
+                  Belum ada Materi/Bab yang dipetakan pada menu Pemetaan Materi untuk Kelas dan Mapel ini.
+                </td>
+              </tr>
+              
+              <tr v-else v-for="(siswa, sIdx) in formNilai.students" :key="siswa.id"
                   class="border-b border-white/4 hover:bg-white/2 transition-colors">
                 
                 <td class="px-4 py-3 text-sm text-slate-500 text-center border-r border-white/8">{{ sIdx + 1 }}</td>
@@ -84,17 +91,18 @@
                   <div class="text-[10px] text-slate-500">{{ siswa.nis }}</div>
                 </td>
 
-                <!-- Input Nilai per TP -->
-                <td v-for="(tp, idx) in tpList" :key="tp.id_tp"
+                <!-- Input Nilai per Materi/Topic (Bab) -->
+                <td v-for="topic in allTopics" :key="topic.id_topic"
                     class="p-0 border-r border-white/8 relative group">
                   <input
-                    v-model.number="siswa.nilai[tp.id_tp]"
+                    v-model.number="siswa.nilai[topic.id_topic]"
                     type="number" min="0" max="100"
+                    placeholder="-"
                     :class="[
                       'w-full h-full absolute inset-0 bg-transparent text-center text-sm font-semibold outline-none focus:bg-indigo-500/20 focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-all',
-                      !siswa.nilai[tp.id_tp] ? 'text-slate-500' : 
-                      siswa.nilai[tp.id_tp] < 70 ? 'text-red-400 font-bold' : 
-                      siswa.nilai[tp.id_tp] >= 90 ? 'text-green-400' : 'text-white'
+                      !siswa.nilai[topic.id_topic] ? 'text-slate-600' : 
+                      siswa.nilai[topic.id_topic] < 70 ? 'text-red-400 font-bold' : 
+                      siswa.nilai[topic.id_topic] >= 90 ? 'text-green-400' : 'text-white'
                     ]"
                   />
                   <!-- Spacer for absolute input -->
@@ -130,7 +138,7 @@
 
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
@@ -149,6 +157,7 @@ const navigation = [
       { href: '/guru/dashboard', icon: '📊', label: 'Dashboard' },
       { href: '/guru/jadwal', icon: '📅', label: 'Jadwal Mengajar' },
       { href: '/guru/riwayat-jurnal', icon: '📜', label: 'Riwayat Jurnal Mengajar' },
+      { href: '/guru/materi', icon: '📁', label: 'Materi Pembelajaran' },
     ],
   },
   {
@@ -179,6 +188,26 @@ watch(() => filterForm.id_mapel, (val) => {
 
 const formNilai = useForm({
   students: []
+});
+
+// Flatten TPs into dynamic sub-columns (Materi/Bab)
+const allTopics = computed(() => {
+  if (!props.tpList) return [];
+  const list = [];
+  props.tpList.forEach(tp => {
+    if (tp.topics) {
+      tp.topics.forEach(topic => {
+        list.push({
+          id_topic: topic.id_topic,
+          nama_topik: topic.nama_topik,
+          id_tp: tp.id_tp,
+          kode_tp: tp.kode_tp,
+          deskripsi_tp: tp.deskripsi_tp,
+        });
+      });
+    }
+  });
+  return list;
 });
 
 onMounted(() => {

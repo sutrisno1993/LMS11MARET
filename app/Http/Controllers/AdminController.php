@@ -575,9 +575,42 @@ class AdminController extends Controller
             ];
         })->values();
 
+        // -------------------------------------------------------------
+        // KEAKTIVAN SISWA (Berdasarkan akumulasi Sakit, Izin, Alpa terbanyak)
+        // -------------------------------------------------------------
+        $studentAttendances = \App\Models\StudentAttendance::with(['student.clas'])
+            ->whereHas('kbmSession', function($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal', [$startDate, $endDate]);
+            })
+            ->whereIn('status', ['SAKIT', 'IZIN', 'ALPA'])
+            ->get();
+
+        $laporanSiswa = $studentAttendances->groupBy('id_siswa')->map(function ($attendances) {
+            $first = $attendances->first()->student;
+            $sakit = $attendances->where('status', 'SAKIT')->count();
+            $izin = $attendances->where('status', 'IZIN')->count();
+            $alpa = $attendances->where('status', 'ALPA')->count();
+            $totalTidakHadir = $sakit + $izin + $alpa;
+
+            return [
+                'id_siswa' => $attendances->first()->id_siswa,
+                'nama_siswa' => $first->nama_siswa ?? 'Siswa Tidak Ditemukan',
+                'nis' => $first->nis ?? '-',
+                'kelas' => $first->clas->nama_kelas ?? 'Unknown',
+                'sakit' => $sakit,
+                'izin' => $izin,
+                'alpa' => $alpa,
+                'total_tidak_hadir' => $totalTidakHadir,
+            ];
+        })
+        ->sortByDesc('total_tidak_hadir')
+        ->values()
+        ->take(50);
+
         return Inertia::render('Admin/LaporanPerforma', [
             'laporanGuru' => $laporanGuru,
             'laporanWaliKelas' => $laporanWaliKelas,
+            'laporanSiswa' => $laporanSiswa,
             'selectedSemester' => $semester,
             'selectedYear' => $year,
         ]);

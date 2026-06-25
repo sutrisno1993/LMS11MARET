@@ -174,6 +174,7 @@ const navigation = [
     items: [
       { href: '/siswa/dashboard', icon: '🏠', label: 'Beranda' },
       { href: '/siswa/scan-qr', icon: '📷', label: 'Scan QR Presensi', badge: 'Live' },
+      { href: '/siswa/materi', icon: '📁', label: 'Materi Belajar' },
       { href: '/siswa/jadwal', icon: '📅', label: 'Jadwal Kelas' },
     ],
   },

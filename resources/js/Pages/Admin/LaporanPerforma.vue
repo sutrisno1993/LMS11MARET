@@ -56,6 +56,13 @@
       >
         <span>⭐</span> Penilaian Wali Kelas
       </button>
+      <button 
+        @click="activeTab = 'SISWA'"
+        class="px-4 py-3 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors flex items-center gap-2"
+        :class="activeTab === 'SISWA' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-500 hover:text-slate-300'"
+      >
+        <span>👥</span> Keaktivan Siswa (Top Absen)
+      </button>
     </div>
 
     <!-- DATA GRID GURU -->
@@ -146,6 +153,47 @@
       </table>
     </div>
 
+    <!-- DATA GRID KEAKTIVAN SISWA -->
+    <div v-if="activeTab === 'SISWA'" class="bg-[#1E293B] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-black/20 border-b border-white/10">
+            <th class="text-left px-5 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-12">No</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Nama Siswa</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-indigo-400 uppercase tracking-widest">Kelas</th>
+            <th class="text-center px-5 py-4 text-xs font-bold text-yellow-500 uppercase tracking-widest">Sakit</th>
+            <th class="text-center px-5 py-4 text-xs font-bold text-blue-400 uppercase tracking-widest">Izin</th>
+            <th class="text-center px-5 py-4 text-xs font-bold text-red-400 uppercase tracking-widest">Alpa</th>
+            <th class="text-center px-5 py-4 text-xs font-bold text-white uppercase tracking-widest bg-white/5">Total Absen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="laporanSiswa.length === 0">
+            <td colspan="7" class="px-5 py-10 text-center text-slate-500">
+              <span class="text-4xl block mb-3">👻</span>
+              Tidak ada data absensi siswa yang terekam pada rentang semester ini.
+            </td>
+          </tr>
+          <tr v-for="(row, idx) in laporanSiswa" :key="row.id_siswa" class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+            <td class="px-5 py-4 text-sm text-slate-500">{{ idx + 1 }}</td>
+            <td class="px-5 py-4">
+              <div class="text-sm font-semibold text-white group-hover:text-indigo-400 transition-colors">{{ row.nama_siswa }}</div>
+              <div class="text-[10px] text-slate-500">{{ row.nis }}</div>
+            </td>
+            <td class="px-5 py-4">
+              <span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded text-xs font-bold tracking-widest uppercase">
+                {{ row.kelas }}
+              </span>
+            </td>
+            <td class="px-5 py-4 text-sm text-yellow-500 text-center font-bold">{{ row.sakit }}</td>
+            <td class="px-5 py-4 text-sm text-blue-400 text-center font-bold">{{ row.izin }}</td>
+            <td class="px-5 py-4 text-sm text-red-400 text-center font-bold">{{ row.alpa }}</td>
+            <td class="px-5 py-4 text-sm text-white text-center font-black bg-white/5">{{ row.total_tidak_hadir }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
   </AppLayout>
 </template>
 
@@ -157,6 +205,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 const props = defineProps({
   laporanGuru: Array,
   laporanWaliKelas: Array,
+  laporanSiswa: Array,
   selectedSemester: String,
   selectedYear: [String, Number]
 });
@@ -235,16 +284,25 @@ const getTextColor = (pct) => {
 // Fungsi Ekspor ke CSV
 const downloadExcel = () => {
   const isWali = activeTab.value === 'WALI';
-  const data = isWali ? props.laporanWaliKelas : props.laporanGuru;
+  const isSiswa = activeTab.value === 'SISWA';
+  
+  let data = props.laporanGuru;
+  if (isWali) data = props.laporanWaliKelas;
+  if (isSiswa) data = props.laporanSiswa;
   
   if (data.length === 0) return alert('Tidak ada data untuk diekspor!');
 
   let csvContent = "data:text/csv;charset=utf-8,";
   
   // Header CSV
-  let headers = isWali 
-    ? ["No", "Nama Guru (Wali Kelas)", "Kelas Wali", "Total Responden", "Skor Kuesioner", "Persentase Kepuasan"]
-    : ["No", "Nama Guru", "Total Sesi", "Hadir", "Terlambat", "Alpa", "Persentase Kehadiran"];
+  let headers = [];
+  if (isWali) {
+    headers = ["No", "Nama Guru (Wali Kelas)", "Kelas Wali", "Total Responden", "Skor Kuesioner", "Persentase Kepuasan"];
+  } else if (isSiswa) {
+    headers = ["No", "Nama Siswa", "NIS", "Kelas", "Sakit", "Izin", "Alpa", "Total Absen"];
+  } else {
+    headers = ["No", "Nama Guru", "Total Sesi", "Hadir", "Terlambat", "Alpa", "Persentase Kehadiran"];
+  }
     
   csvContent += headers.join(",") + "\n";
 
@@ -259,6 +317,17 @@ const downloadExcel = () => {
         row.total_respon,
         row.skor_kuesioner,
         row.persentase + '%'
+      ];
+    } else if (isSiswa) {
+      rowData = [
+        idx + 1,
+        `"${row.nama_siswa}"`,
+        `"${row.nis}"`,
+        `"${row.kelas}"`,
+        row.sakit,
+        row.izin,
+        row.alpa,
+        row.total_tidak_hadir
       ];
     } else {
       rowData = [
@@ -279,7 +348,9 @@ const downloadExcel = () => {
   link.setAttribute("href", encodedUri);
   
   const semLabel = selectedSemester.value === 'GANJIL' ? 'Ganjil' : 'Genap';
-  const prefix = isWali ? 'Laporan_Wali_Kelas_Kuesioner' : 'Laporan_Absensi_Guru';
+  let prefix = 'Laporan_Absensi_Guru';
+  if (isWali) prefix = 'Laporan_Wali_Kelas_Kuesioner';
+  if (isSiswa) prefix = 'Laporan_Keaktivan_Siswa_Top_Absen';
   link.setAttribute("download", `${prefix}_Semester_${semLabel}_${selectedYear.value}.csv`);
   
   document.body.appendChild(link);

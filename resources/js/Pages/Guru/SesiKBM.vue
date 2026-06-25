@@ -12,7 +12,7 @@
       </span>
     </template>
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
       <!-- ===================== PANEL KIRI: QR ENGINE / JURNAL ===================== -->
       <div class="space-y-5">
@@ -489,6 +489,7 @@ const navigation = [
       { href: '/guru/dashboard', icon: '📊', label: 'Dashboard' },
       { href: '/guru/jadwal', icon: '📅', label: 'Jadwal Mengajar' },
       { href: '/guru/riwayat-jurnal', icon: '📜', label: 'Riwayat Jurnal Mengajar' },
+      { href: '/guru/materi', icon: '📁', label: 'Materi Pembelajaran' },
     ],
   },
   {

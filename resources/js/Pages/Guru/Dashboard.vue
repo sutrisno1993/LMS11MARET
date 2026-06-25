@@ -12,10 +12,10 @@
       </span>
     </template>
 
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       <!-- LEFT: Jadwal Hari Ini (2/3) -->
-      <div class="col-span-2 space-y-4">
+      <div class="col-span-1 lg:col-span-2 space-y-4">
 
         <!-- Header -->
         <div class="flex items-center justify-between">
@@ -237,7 +237,8 @@ import QrcodeVue from 'qrcode.vue';
 const props = defineProps({ 
   sessions: Array,
   jadwal: Array,
-  hariIni: String
+  hariIni: String,
+  mapelDiampu: Array,
 });
 
 // Live clock
@@ -320,6 +321,7 @@ const navigation = [
       { href: '/guru/dashboard', icon: '📊', label: 'Dashboard' },
       { href: '/guru/jadwal', icon: '📅', label: 'Jadwal Mengajar' },
       { href: '/guru/riwayat-jurnal', icon: '📜', label: 'Riwayat Jurnal Mengajar' },
+      { href: '/guru/materi', icon: '📁', label: 'Materi Pembelajaran' },
     ],
   },
   {
@@ -425,11 +427,16 @@ onUnmounted(() => {
 
 const myStats = ref({ hadir: 24, terlambat: 3, alpa: 1, pctHadir: 86, pctTerlambat: 11, pctAlpa: 3 });
 
-const mapelDiampu = ref([
-  { nama: 'Dasar-Dasar Jaringan', kelas: 'XII TKJ 1 & 2', jp: 4 },
-  { nama: 'Administrasi Sistem Jaringan', kelas: 'XII TKJ 2', jp: 4 },
-  { nama: 'Keamanan Jaringan', kelas: 'XI TKJ 1', jp: 2 },
-]);
+const mapelDiampu = computed(() => {
+  if (props.mapelDiampu && props.mapelDiampu.length > 0) {
+    return props.mapelDiampu;
+  }
+  return [
+    { nama: 'Dasar-Dasar Jaringan', kelas: 'XII TKJ 1 & 2', jp: 4 },
+    { nama: 'Administrasi Sistem Jaringan', kelas: 'XII TKJ 2', jp: 4 },
+    { nama: 'Keamanan Jaringan', kelas: 'XI TKJ 1', jp: 2 },
+  ];
+});
 
 const quickLinks = [
   { href: '/guru/pemetaan-materi', icon: '🗺️', label: 'Pemetaan CP & TP' },

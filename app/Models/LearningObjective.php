@@ -28,4 +28,19 @@ class LearningObjective extends Model
     {
         return $this->hasMany(StudentGrade::class, 'id_tp', 'id_tp');
     }
+
+    public function classes()
+    {
+        return $this->belongsToMany(Clas::class, 'learning_objective_class', 'id_tp', 'id_kelas');
+    }
+
+    public function element()
+    {
+        return $this->belongsTo(LearningElement::class, 'id_element', 'id_element');
+    }
+
+    public function topics()
+    {
+        return $this->hasMany(LearningTopic::class, 'id_tp', 'id_tp');
+    }
 }

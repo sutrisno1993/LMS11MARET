@@ -71,7 +71,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(siswa, idx) in students" :key="siswa.id" class="border-b border-white/4 hover:bg-white/2 transition-colors">
+              <tr v-for="(siswa, idx) in localStudents" :key="siswa.id" class="border-b border-white/4 hover:bg-white/2 transition-colors">
                 <td class="px-4 py-3 text-sm text-slate-500 text-center border-r border-white/8">{{ idx + 1 }}</td>
                 <td class="px-4 py-3 border-r border-white/8">
                   <div class="text-sm font-semibold text-white">{{ siswa.nama }}</div>
@@ -126,8 +126,13 @@
 
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+
+const props = defineProps({
+  students: Array,
+  kelas: Object,
+});
 
 const navigation = [
   {
@@ -135,6 +140,7 @@ const navigation = [
     items: [
       { href: '/walikelas/dashboard', icon: '🏠', label: 'Dashboard Kelas' },
       { href: '/walikelas/jurnal', icon: '📓', label: 'Jurnal KBM Kelas' },
+      { href: '/walikelas/pembinaan', icon: '⚡', label: 'Pembinaan & SP Siswa' },
       { href: '/walikelas/p5-assessment', icon: '🌱', label: 'Asesmen P5' },
     ],
   },
@@ -143,11 +149,13 @@ const navigation = [
 const selectedTema = ref("1");
 const selectedDimensi = ref("2");
 
-const students = ref([
-  { id: 1, nama: 'Ahmad Rifai', nilai: 'BSH', catatan: 'Aktif berkolaborasi dalam kelompok.' },
-  { id: 2, nama: 'Budi Santoso', nilai: 'SB', catatan: 'Mengambil peran pemimpin diskusi secara inisiatif.' },
-  { id: 3, nama: 'Citra Dewi', nilai: 'MB', catatan: 'Masih malu-malu mengungkapkan pendapat.' },
-  { id: 4, nama: 'Dian Pratama', nilai: 'BB', catatan: 'Cenderung pasif dan jarang hadir saat proyek.' },
-  { id: 5, nama: 'Eka Rahayu', nilai: 'BSH', catatan: '' },
-]);
+const localStudents = ref([]);
+
+onMounted(() => {
+  localStudents.value = props.students || [];
+});
+
+watch(() => props.students, (newVal) => {
+  localStudents.value = newVal || [];
+});
 </script>

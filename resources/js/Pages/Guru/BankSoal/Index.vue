@@ -67,6 +67,7 @@ const navigation = [
       { href: '/guru/dashboard', icon: '📊', label: 'Dashboard' },
       { href: '/guru/jadwal', icon: '📅', label: 'Jadwal Mengajar' },
       { href: '/guru/riwayat-jurnal', icon: '📜', label: 'Riwayat Jurnal Mengajar' },
+      { href: '/guru/materi', icon: '📁', label: 'Materi Pembelajaran' },
     ],
   },
   {

@@ -23,4 +23,9 @@ class StudentGrade extends Model
     {
         return $this->belongsTo(LearningObjective::class, 'id_tp', 'id_tp');
     }
+
+    public function topic()
+    {
+        return $this->belongsTo(LearningTopic::class, 'id_topic', 'id_topic');
+    }
 }

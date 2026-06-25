@@ -135,9 +135,12 @@ Route::middleware(['auth', 'role:TEACHER'])->prefix('guru')->name('guru.')->grou
     // Fitur KBM Tambahan
     Route::get('/pemetaan-materi', [\App\Http\Controllers\GuruController::class, 'pemetaanMateri'])->name('pemetaan-materi');
     Route::post('/pemetaan-materi', [\App\Http\Controllers\GuruController::class, 'simpanPemetaanMateri']);
+    Route::delete('/pemetaan-materi/{id_tp}', [\App\Http\Controllers\GuruController::class, 'hapusPemetaanMateri'])->name('pemetaan-materi.delete');
+    Route::delete('/pemetaan-materi/element/{id_element}', [\App\Http\Controllers\GuruController::class, 'hapusElement'])->name('pemetaan-materi.element.delete');
     Route::get('/nilai-sumatif', [\App\Http\Controllers\GuruController::class, 'nilaiSumatif'])->name('nilai-sumatif');
     Route::post('/nilai-sumatif', [\App\Http\Controllers\GuruController::class, 'simpanNilaiSumatif']);
     Route::get('/nilai-akhir', [\App\Http\Controllers\GuruController::class, 'nilaiAkhir'])->name('nilai-akhir');
+    Route::post('/nilai-akhir', [\App\Http\Controllers\GuruController::class, 'simpanNilaiAkhir']);
     Route::get('/rapor-preview', [\App\Http\Controllers\GuruController::class, 'raporPreview'])->name('rapor-preview');
     Route::get('/kbm-status/{id}', [\App\Http\Controllers\GuruController::class, 'kbmStatus'])->name('kbm-status');
 
@@ -154,6 +157,12 @@ Route::middleware(['auth', 'role:TEACHER'])->prefix('guru')->name('guru.')->grou
     Route::post('/live-exam/{id}/close', [\App\Http\Controllers\LiveExamController::class, 'close'])->name('live-exam.close');
     Route::post('/kbm/{id_sesi}/ujian', [\App\Http\Controllers\BankSoalController::class, 'launchUjian'])->name('kbm.ujian.launch');
     Route::post('/kbm/ujian/{id}/tutup', [\App\Http\Controllers\BankSoalController::class, 'closeUjian'])->name('kbm.ujian.close');
+
+    // Upload Materi (Bahan Ajar)
+    Route::get('/materi', [\App\Http\Controllers\MaterialController::class, 'index'])->name('materi.index');
+    Route::post('/materi', [\App\Http\Controllers\MaterialController::class, 'store'])->name('materi.store');
+    Route::delete('/materi/{id}', [\App\Http\Controllers\MaterialController::class, 'destroy'])->name('materi.destroy');
+    Route::get('/materi/{id}/download', [\App\Http\Controllers\MaterialController::class, 'download'])->name('materi.download');
 });
 
 // Siswa routes
@@ -177,6 +186,10 @@ Route::middleware(['auth', 'role:STUDENT'])->prefix('siswa')->name('siswa.')->gr
 
     // Jadwal Kelas
     Route::get('/jadwal', [\App\Http\Controllers\SiswaController::class, 'jadwal'])->name('jadwal');
+
+    // Download Materi (Bahan Ajar)
+    Route::get('/materi', [\App\Http\Controllers\MaterialController::class, 'siswaIndex'])->name('materi.index');
+    Route::get('/materi/{id}/download', [\App\Http\Controllers\MaterialController::class, 'download'])->name('materi.download');
 });
 
 // Wali Kelas routes
@@ -184,4 +197,7 @@ Route::middleware(['auth', 'role:TEACHER'])->prefix('walikelas')->name('walikela
     Route::get('/dashboard', [WaliKelasController::class, 'dashboard'])->name('dashboard');
     Route::get('/p5-assessment', [WaliKelasController::class, 'p5Assessment'])->name('p5-assessment');
     Route::get('/jurnal', [WaliKelasController::class, 'jurnalIndex'])->name('jurnal.index');
+    Route::get('/pembinaan', [WaliKelasController::class, 'pembinaanIndex'])->name('pembinaan.index');
+    Route::post('/pembinaan', [WaliKelasController::class, 'simpanPembinaan'])->name('pembinaan.store');
+    Route::delete('/pembinaan/{id}', [WaliKelasController::class, 'hapusPembinaan'])->name('pembinaan.delete');
 });

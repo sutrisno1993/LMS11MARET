@@ -100,20 +100,27 @@ Aktor "Verifikator" yang menjaga kedisiplinan sekolah dan penikmat transparansi 
 Peran "Turunan" dari Guru yang memiliki wewenang eksekutif atas satu Rombongan Belajar (Kelas) spesifik.
 
 ### A. Daftar Menu (Ekstra di atas menu Guru biasa)
-- `Dashboard Wali Kelas`: Pantauan khusus statistik satu rombel.
-- `P5 Assessment`: Modul input nilai Projek Penguatan Profil Pelajar Pancasila (P5).
-- `Catatan Wali Kelas`: Modul pengisian deskripsi sikap dan kehadiran manual siswa di Rapor.
+- `Dashboard Kelas` (`/walikelas/dashboard`): Layar pemantauan statistik kelas perwalian (Jumlah Siswa, Rata-rata Kehadiran, Rata-rata Rapor Kelas, dan Poin Pelanggaran). Menyajikan tabel daftar siswa lengkap dengan persentase kehadiran semester, poin pelanggaran, progres kelengkapan pengisian rapor, nilai rata-rata rapor, lencana status remedi, serta modal pop-up "Lihat Detail" untuk menganalisis nilai SAS & nilai akhir per mata pelajaran.
+- `Jurnal KBM Kelas` (`/walikelas/jurnal`): Memonitor jurnal kegiatan belajar mengajar harian yang diisi oleh guru mata pelajaran di kelas perwaliannya.
+- `Pembinaan & SP Siswa` (`/walikelas/pembinaan`): Antarmuka pencatatan dan tindakan kedisiplinan khusus siswa kelas perwalian.
+- `Asesmen P5` (`/walikelas/p5-assessment`): Modul pengisian deskripsi projek dan penilaian Capaian Profil Pelajar Pancasila.
 
 ### B. Tugas Utama
-- Memantau rekap absensi harian dan perkembangan nilai akademis seluruh siswa di kelas perwaliannya.
-- Menjadi filter dan verifikator terakhir atas nilai guru mapel sebelum rapor diterbitkan.
-- Mengelola penilaian moral, sikap (P5), dan absensi manual siswa.
+- Memantau rekap absensi harian, poin pelanggaran, serta perkembangan nilai akademis seluruh siswa di kelas perwaliannya secara real-time.
+- Melakukan intervensi dini terhadap siswa berkinerja rendah atau bermasalah kehadiran.
+- Menjadi filter dan verifikator terakhir atas nilai guru mapel (memantau persentase kelengkapan rapor) sebelum rapor diterbitkan.
+- Mengelola penilaian moral, sikap (P5), serta tindakan pembinaan siswa.
 
 ### C. Alur Kerja (Flow)
-1. **Pemantauan Berkala (Selama Semester)**: Wali Kelas memantau `Dashboard Wali Kelas`. Jika ia melihat ada siswa yang tingkat kehadirannya buruk atau nilai sumatif dari guru lain sangat anjlok, Wali Kelas dapat melakukan tindakan preventif (memanggil siswa/orang tua).
-2. **Penilaian P5**: Di pertengahan atau akhir semester, Wali Kelas memasukkan nilai rubrik/dimensi P5 untuk proyek-proyek yang telah dijalankan oleh kelas tersebut.
-3. **Catatan Rapor**: Menjelang pembagian rapor, Wali Kelas membuka `Catatan Wali Kelas` untuk menginput total kehadiran siswa (Sakit, Izin, Tanpa Keterangan), wejangan/catatan wali kelas, dan evaluasi sikap spiritual & sosial siswa.
-4. **Finalisasi Kelas**: Wali Kelas memastikan semua komponen nilai dari guru mapel lain sudah masuk 100%. Setelah valid, Kurikulum diizinkan mencetak rapor untuk Rombongan Belajar tersebut.
+1. **Pemantauan Akademik & Deteksi Remedi (Real-Time)**: Wali Kelas memantau `Dashboard Kelas`. Baris siswa yang memiliki rata-rata rapor di bawah KKM (< 75) otomatis ditandai dengan warna merah transparan (`bg-red-500/5`). Sistem juga menampilkan lencana peringatan `⚠️ X Remedi` jika ada mata pelajaran yang tidak tuntas.
+2. **Investigasi Nilai Detail (Modal View)**: Wali Kelas mengklik tombol "Lihat Detail" pada siswa terkait untuk membuka modal berisi tabel komparasi nilai SAS dan Nilai Akhir Rapor untuk seluruh mata pelajaran di kelas tersebut guna melihat mata pelajaran spesifik yang membutuhkan remedial.
+3. **Intervensi Kedisiplinan & Tindakan (Pembinaan & SP)**: Jika siswa kedapatan memiliki akumulasi Alfa yang tinggi atau pelanggaran disiplin lainnya, Wali Kelas masuk ke menu `Pembinaan & SP Siswa` untuk melakukan langkah-langkah pembinaan terstruktur:
+   - Mencatat log pembinaan pribadi/personal.
+   - Melakukan pemanggilan orang tua murid.
+   - Menerbitkan Surat Peringatan tingkat bertahap (SP 1, SP 2, dan SP 3).
+   - Menandatangani Surat Perjanjian Siap Tidak Naik Kelas sebagai langkah pembinaan tegas terakhir.
+4. **Penilaian P5**: Di pertengahan atau akhir semester, Wali Kelas mengisi asesmen dimensi Profil Pelajar Pancasila untuk setiap siswa di kelas perwalian sesuai projek aktif.
+5. **Finalisasi Kelas**: Wali Kelas memastikan semua komponen nilai dari guru mapel lain sudah masuk 100% (kelengkapan rapor 100%). Setelah valid, Kurikulum diizinkan mencetak rapor untuk Rombongan Belajar tersebut.
 
 ---
 
