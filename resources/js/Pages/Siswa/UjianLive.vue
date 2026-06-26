@@ -110,7 +110,7 @@ const submitAnswer = async (id_question, jawaban_siswa) => {
       jawaban_siswa: jawaban_siswa
     });
   } catch (e) {
-    alert(e.response?.data?.message || 'Gagal menyimpan jawaban. Cek koneksi Anda.');
+    window.dispatchEvent(new CustomEvent('toast', { detail: { message: e.response?.data?.message || 'Gagal menyimpan jawaban. Cek koneksi Anda.', type: 'error' } }));
   }
 };
 

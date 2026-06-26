@@ -97,20 +97,12 @@
         </table>
       </div>
     </div>
-
-    <!-- Custom Toast -->
-    <transition enter-active-class="transition ease-out duration-300" enter-from-class="transform opacity-0 translate-y-2" enter-to-class="transform opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200" leave-from-class="transform opacity-100 translate-y-0" leave-to-class="transform opacity-0 translate-y-2">
-      <div v-if="toastMessage" class="fixed bottom-6 right-6 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 border border-emerald-400">
-        <span class="text-xl">✅</span>
-        <span class="font-bold text-sm">{{ toastMessage }}</span>
-      </div>
-    </transition>
   </AppLayout>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
@@ -118,6 +110,8 @@ const props = defineProps({
   hariIni: String,
   teachers: Array,
 });
+
+const page = usePage();
 
 const toggleHadir = (guru) => {
   if (guru.status === 'HADIR') {
@@ -130,30 +124,13 @@ const toggleHadir = (guru) => {
   updateStatus(guru);
 };
 
-const toastMessage = ref('');
-let toastTimeout = null;
-
-const showToast = (msg) => {
-  toastMessage.value = msg;
-  if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toastMessage.value = '';
-  }, 3000);
-};
-
 const updateStatus = (guru) => {
-  router.post(route('tugas-piket.absensi'), {
+  router.post('/guru/tugas-piket/absensi', {
     id_guru: guru.id_guru,
-    status: guru.status || 'LAINNYA', // if null sent as LAINNYA temporary
+    status: guru.status || 'LAINNYA',
     keterangan_jam: guru.keterangan_jam,
   }, {
     preserveScroll: true,
-    onSuccess: () => {
-      showToast('Status kehadiran guru berhasil diperbarui!');
-    },
-    onError: () => {
-      alert('Gagal memperbarui status.');
-    }
   });
 };
 

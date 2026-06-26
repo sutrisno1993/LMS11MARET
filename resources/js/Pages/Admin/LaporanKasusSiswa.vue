@@ -262,7 +262,10 @@ const getBadgeClass = (type) => {
 };
 
 const downloadExcel = () => {
-  if (props.cases.length === 0) return alert('Tidak ada data untuk diekspor!');
+  if (props.cases.length === 0) {
+    window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Tidak ada data untuk diekspor!', type: 'warning' } }));
+    return;
+  }
 
   let csvContent = "data:text/csv;charset=utf-8,";
   const headers = ["No", "Nama Siswa", "NIS", "Kelas", "Wali Kelas", "Kategori Kasus", "Detail Kasus", "Tipe Tindakan", "Tanggal", "Keterangan", "Tindak Lanjut"];

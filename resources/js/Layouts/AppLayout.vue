@@ -186,10 +186,32 @@
       </div>
     </main>
   </div>
+
+  <!-- Global Toast Notification -->
+  <transition
+    enter-active-class="transition ease-out duration-300"
+    enter-from-class="transform opacity-0 translate-y-2 translate-x-2"
+    enter-to-class="transform opacity-100 translate-y-0 translate-x-0"
+    leave-active-class="transition ease-in duration-200"
+    leave-from-class="transform opacity-100 translate-y-0 translate-x-0"
+    leave-to-class="transform opacity-0 translate-y-2 translate-x-2"
+  >
+    <div v-if="toastMessage" :class="[
+      'fixed top-20 right-6 text-white px-5 py-3 rounded-xl shadow-2xl z-[9999] flex items-center gap-3 border backdrop-blur-md',
+      toastType === 'success' ? 'bg-emerald-500/90 border-emerald-400/50' : 
+      toastType === 'error' ? 'bg-rose-500/90 border-rose-400/50' :
+      toastType === 'warning' ? 'bg-amber-500/90 border-amber-400/50' : 'bg-blue-500/90 border-blue-400/50'
+    ]">
+      <span class="text-xl">
+        {{ toastType === 'success' ? '✅' : toastType === 'error' ? '⚠️' : toastType === 'warning' ? '🔔' : 'ℹ️' }}
+      </span>
+      <span class="font-bold text-sm">{{ toastMessage }}</span>
+    </div>
+  </transition>
 </template>
 
 <script setup>
-import { Link, usePage, useForm } from '@inertiajs/vue3';
+import { Link, usePage, useForm, router } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
@@ -399,4 +421,76 @@ const resetMockTime = () => {
     preserveScroll: true,
   });
 };
+
+// Global Toast System Logic
+const toastMessage = ref('');
+const toastType = ref('success');
+let toastTimeout = null;
+
+const showToast = (msg, type = 'success') => {
+  toastMessage.value = msg;
+  toastType.value = type;
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toastMessage.value = '';
+  }, 4000);
+};
+
+// Listeners for global notifications
+let unregisterSuccess = null;
+let unregisterError = null;
+
+const handleCustomToast = (event) => {
+  const { message, type } = event.detail || {};
+  if (message) {
+    showToast(message, type || 'success');
+  }
+};
+
+onMounted(() => {
+  // Listen to programmatically triggered toasts
+  window.addEventListener('toast', handleCustomToast);
+
+  // Listen to Inertia request success
+  unregisterSuccess = router.on('success', (event) => {
+    const flash = event.detail.page.props.flash;
+    if (flash?.success) {
+      showToast(flash.success, 'success');
+    } else if (flash?.message) {
+      showToast(flash.message, 'success');
+    }
+  });
+
+  // Listen to Inertia request error
+  unregisterError = router.on('error', (event) => {
+    const flash = event.detail.page.props.flash;
+    if (flash?.error) {
+      showToast(flash.error, 'error');
+    } else {
+      // Find the first validation error if any
+      const errors = event.detail.page.props.errors || {};
+      const firstError = Object.values(errors)[0];
+      if (firstError) {
+        showToast(firstError, 'error');
+      }
+    }
+  });
+
+  // Check initial flash message on mount
+  const initialFlash = page.props.flash;
+  if (initialFlash?.success) {
+    showToast(initialFlash.success, 'success');
+  } else if (initialFlash?.message) {
+    showToast(initialFlash.message, 'success');
+  } else if (initialFlash?.error) {
+    showToast(initialFlash.error, 'error');
+  }
+});
+
+onUnmounted(() => {
+  window.removeEventListener('toast', handleCustomToast);
+  if (unregisterSuccess) unregisterSuccess();
+  if (unregisterError) unregisterError();
+  if (toastTimeout) clearTimeout(toastTimeout);
+});
 </script>

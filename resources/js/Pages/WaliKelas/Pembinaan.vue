@@ -229,13 +229,6 @@
       </div>
     </div>
 
-    <!-- Custom Toast -->
-    <transition enter-active-class="transition ease-out duration-300" enter-from-class="transform opacity-0 translate-y-2" enter-to-class="transform opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200" leave-from-class="transform opacity-100 translate-y-0" leave-to-class="transform opacity-0 translate-y-2">
-      <div v-if="toastMessage" class="fixed bottom-6 right-6 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 border border-emerald-400">
-        <span class="text-xl">✅</span>
-        <span class="font-bold text-sm">{{ toastMessage }}</span>
-      </div>
-    </transition>
   </AppLayout>
 </template>
 
@@ -331,17 +324,6 @@ const clearImage = () => {
   }
 };
 
-const toastMessage = ref('');
-let toastTimeout = null;
-
-const showToast = (msg) => {
-  toastMessage.value = msg;
-  if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toastMessage.value = '';
-  }, 3000);
-};
-
 const submitTindakan = () => {
   // Post as multipart/form-data
   form.post('/walikelas/pembinaan', {
@@ -349,7 +331,6 @@ const submitTindakan = () => {
     forceFormData: true,
     onSuccess: () => {
       showModal.value = false;
-      showToast('Tindakan pembinaan berhasil dicatat!');
     }
   });
 };
@@ -358,9 +339,6 @@ const hapusTindakan = (id) => {
   if (confirm('Apakah Anda yakin ingin menghapus catatan pembinaan ini?')) {
     router.delete(`/walikelas/pembinaan/${id}`, {
       preserveScroll: true,
-      onSuccess: () => {
-        showToast('Catatan pembinaan berhasil dihapus.');
-      }
     });
   }
 };

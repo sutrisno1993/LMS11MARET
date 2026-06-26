@@ -7,18 +7,6 @@
     :navigation="navigation"
   >
     <div class="max-w-2xl mx-auto space-y-6">
-      
-      <transition name="fade">
-        <div v-if="$page.props.flash?.success" class="p-4 rounded-xl border border-green-500/20 bg-green-500/10 text-green-400 text-sm flex items-center gap-3">
-          <span>✅</span> {{ $page.props.flash.success }}
-        </div>
-      </transition>
-      
-      <transition name="fade">
-        <div v-if="$page.props.flash?.error" class="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm flex items-center gap-3">
-          <span>⚠️</span> {{ $page.props.flash.error }}
-        </div>
-      </transition>
 
       <div class="rounded-2xl border border-white/10 p-6 bg-[#0B0F19]">
         <h3 class="font-bold text-white mb-2">Persentase Evaluasi Pembelajaran</h3>
@@ -97,25 +85,19 @@
       </div>
 
     </div>
-
-    <!-- Custom Toast -->
-    <transition enter-active-class="transition ease-out duration-300" enter-from-class="transform opacity-0 translate-y-2" enter-to-class="transform opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200" leave-from-class="transform opacity-100 translate-y-0" leave-to-class="transform opacity-0 translate-y-2">
-      <div v-if="toastMessage" class="fixed bottom-6 right-6 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 border border-emerald-400">
-        <span class="text-xl">✅</span>
-        <span class="font-bold text-sm">{{ toastMessage }}</span>
-      </div>
-    </transition>
   </AppLayout>
 </template>
 
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
   gradeConfig: Object
 });
+
+const page = usePage();
 
 const form = useForm({
   bobot_formatif: props.gradeConfig?.bobot_formatif ?? 40,
@@ -127,27 +109,13 @@ const totalBobot = computed(() => {
   return Number(form.bobot_formatif) + Number(form.bobot_sumatif) + Number(form.bobot_absensi);
 });
 
-const toastMessage = ref('');
-let toastTimeout = null;
-
-const showToast = (msg) => {
-  toastMessage.value = msg;
-  if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toastMessage.value = '';
-  }, 3000);
-};
-
 const submit = () => {
-  if (totalBobot.value !== 100) return;
+  if (totalBobot.value !== 100) {
+    window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Total bobot harus tepat 100%!', type: 'error' } }));
+    return;
+  }
   form.post('/admin/grade-config', {
     preserveScroll: true,
-    onSuccess: () => {
-      showToast('Konfigurasi bobot berhasil disimpan!');
-    },
-    onError: () => {
-      alert('Terjadi kesalahan saat menyimpan bobot.');
-    }
   });
 };
 

@@ -6,17 +6,7 @@
     subtitle="Kelola dan import data siswa secara massal"
     :navigation="navigation"
   >
-    <!-- ALERT NOTIFICATION -->
-    <transition name="fade">
-      <div v-if="$page.props.flash?.success" class="mb-6 p-4 rounded-xl border border-green-500/20 bg-green-500/10 text-green-400 text-sm flex items-center gap-3">
-        <span>✅</span> {{ $page.props.flash.success }}
-      </div>
-    </transition>
-    <transition name="fade">
-      <div v-if="$page.props.flash?.error || errorMessage" class="mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm flex items-center gap-3">
-        <span>⚠️</span> {{ $page.props.flash?.error || errorMessage }}
-      </div>
-    </transition>
+    <!-- Alert notification is handled globally by AppLayout toast -->
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
       <!-- UPLOAD CARD -->
@@ -156,7 +146,6 @@ const props = defineProps({
 const filterKelas = ref(props.filters.id_kelas || '');
 const selectedFile = ref(null);
 const isUploading = ref(false);
-const errorMessage = ref('');
 
 // Navigation
 const navigation = [
@@ -216,7 +205,6 @@ const handleFileUpload = (e) => {
 const submitImport = () => {
   if (!selectedFile.value) return;
   isUploading.value = true;
-  errorMessage.value = '';
 
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -237,18 +225,16 @@ const submitImport = () => {
 
       form.post('/admin/siswa/import', {
         preserveScroll: true,
-        onSuccess: () => {
+        onFinish: () => {
           isUploading.value = false;
-          selectedFile.value = null;
         },
-        onError: (errors) => {
-          isUploading.value = false;
-          errorMessage.value = errors.file || 'Terjadi kesalahan saat import.';
+        onSuccess: () => {
+          selectedFile.value = null;
         }
       });
     } catch (err) {
       isUploading.value = false;
-      errorMessage.value = 'Gagal membaca file Excel. Pastikan format sudah benar.';
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Gagal membaca file Excel. Pastikan format sudah benar.', type: 'error' } }));
     }
   };
   

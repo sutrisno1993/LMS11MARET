@@ -7,22 +7,23 @@
     :navigation="navigation"
   >
     <template #topbar-actions>
-      <!-- Dropdown Pilih Kelas -->
+      <!-- Dropdown Pilih Mapel -->
       <div class="flex items-center gap-1.5 sm:gap-2 mr-2 sm:mr-4">
-        <label class="text-xs text-slate-500 font-semibold uppercase hidden sm:inline">Kelas:</label>
-        <select v-model="selectedKelas" class="bg-[#111827] sm:bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 sm:px-3 text-xs sm:text-sm text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 max-w-[120px] sm:max-w-[200px] md:max-w-none truncate">
-          <option v-for="cls in uniqueClasses" :key="cls.id_kelas" :value="cls.id_kelas">
-            {{ cls.nama_kelas }}
+        <label class="text-xs text-slate-500 font-semibold uppercase hidden sm:inline">Mapel:</label>
+        <select v-model="selectedMapel" class="bg-[#111827] sm:bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 sm:px-3 text-xs sm:text-sm text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 max-w-[150px] sm:max-w-[250px] md:max-w-none truncate">
+          <option v-for="mapel in uniqueMapels" :key="mapel.id_mapel" :value="mapel.id_mapel">
+            {{ mapel.nama_mapel }}
           </option>
         </select>
       </div>
 
-      <!-- Dropdown Pilih Mapel -->
+      <!-- Dropdown Pilih Kelas (Filter) -->
       <div class="flex items-center gap-1.5 sm:gap-2 mr-2 sm:mr-4">
-        <label class="text-xs text-slate-500 font-semibold uppercase hidden sm:inline">Mapel:</label>
-        <select v-model="selectedMapel" class="bg-[#111827] sm:bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 sm:px-3 text-xs sm:text-sm text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 max-w-[120px] sm:max-w-[200px] md:max-w-none truncate">
-          <option v-for="mapel in availableMapels" :key="mapel.id_mapel" :value="mapel.id_mapel">
-            {{ mapel.nama_mapel }}
+        <label class="text-xs text-slate-500 font-semibold uppercase hidden sm:inline">Kelas:</label>
+        <select v-model="selectedKelasFilter" class="bg-[#111827] sm:bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 sm:px-3 text-xs sm:text-sm text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 max-w-[120px] sm:max-w-[200px] md:max-w-none truncate">
+          <option value="">-- Semua Kelas --</option>
+          <option v-for="cls in classesForSelectedMapel" :key="cls.id_kelas" :value="cls.id_kelas">
+            {{ cls.nama_kelas }}
           </option>
         </select>
       </div>
@@ -64,10 +65,65 @@
             </button>
           </div>
         </div>
+
+        <!-- WIDGET: Status Pemetaan Mengajar -->
+        <div class="rounded-2xl border border-white/8 p-5 shadow-xl transition-all duration-300 hover:border-white/15" style="background: var(--card)">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="text-lg">🗺️</span>
+            <div class="flex-1">
+              <h3 class="text-sm font-bold text-slate-100">Status Pemetaan Mengajar</h3>
+              <p class="text-[10px] text-slate-400">Semester {{ activeSemester === 1 ? 'Ganjil' : 'Genap' }}</p>
+            </div>
+          </div>
+          
+          <div class="space-y-4 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+            <div v-for="group in mappingStatusList" :key="group.id_mapel" class="space-y-2">
+              <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate" :title="group.nama_mapel">
+                📚 {{ group.nama_mapel }}
+              </div>
+              <div class="space-y-1.5 pl-2.5 border-l border-white/5">
+                <div 
+                  v-for="cls in group.classes" 
+                  :key="cls.id_kelas"
+                  @click="selectMapelAndKelas(group.id_mapel, cls.id_kelas)"
+                  :class="[
+                    'flex items-center justify-between p-2.5 rounded-xl border transition-all duration-200 cursor-pointer hover:translate-x-0.5',
+                    selectedMapel === group.id_mapel && selectedKelasFilter === cls.id_kelas
+                      ? 'bg-indigo-500/10 border-indigo-500/40 shadow-sm shadow-indigo-500/5'
+                      : 'bg-white/3 border-white/5 hover:bg-white/6 hover:border-white/10'
+                  ]"
+                >
+                  <span class="text-xs font-bold text-slate-200 uppercase truncate pr-2">{{ cls.nama_kelas }}</span>
+                  
+                  <!-- Glassmorphic Badges -->
+                  <span 
+                    v-if="cls.isMapped" 
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.1)] shrink-0"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Ready
+                  </span>
+                  
+                  <span 
+                    v-else 
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-[0_0_12px_rgba(244,63,94,0.1)] shrink-0"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+                    Belum
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div v-if="mappingStatusList.length === 0" class="text-center py-6 text-slate-500 text-xs">
+              Tidak ada jadwal mengajar terdaftar.
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- RIGHT PANEL: Editor Elemen & TP -->
-      <div class="col-span-1 lg:col-span-3 space-y-6">
+      <div id="main-editor-panel" class="col-span-1 lg:col-span-3 space-y-6">
 
         <!-- KONDISI SEDANG EDIT / TAMBAH ELEMEN BARU -->
         <div v-if="isEditing" class="rounded-2xl border border-indigo-500/30 p-5 space-y-4 shadow-lg shadow-indigo-500/10" style="background: var(--card)">
@@ -111,6 +167,29 @@
                   <div class="col-span-5 pr-6">
                     <label class="block text-[8px] font-bold text-slate-500 uppercase mb-1">Deskripsi Tujuan Pembelajaran (TP)</label>
                     <textarea v-model="tp.deskripsi_tp" rows="1" placeholder="Peserta didik dapat memahami..." class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none resize-none"></textarea>
+                  </div>
+                </div>
+
+                <!-- Kelas Penerapan (Inline Checkboxes) -->
+                <div class="space-y-1.5">
+                  <span class="block text-[8px] font-bold text-slate-500 uppercase tracking-widest">Terapkan ke Kelas</span>
+                  <div class="flex flex-wrap gap-2">
+                    <label 
+                      v-for="cls in classesForSelectedMapel" 
+                      :key="cls.id_kelas" 
+                      class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border cursor-pointer transition-all select-none"
+                      :class="tp.target_kelas && tp.target_kelas.includes(cls.id_kelas)
+                        ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300'
+                        : 'bg-black/20 border-white/5 text-slate-400 hover:border-white/10 hover:text-slate-300'"
+                    >
+                      <input 
+                        type="checkbox" 
+                        :value="cls.id_kelas" 
+                        v-model="tp.target_kelas" 
+                        class="rounded border-white/10 text-indigo-600 focus:ring-indigo-500 bg-black/20 w-3.5 h-3.5"
+                      />
+                      <span class="text-[10px] font-bold uppercase">{{ cls.nama_kelas }}</span>
+                    </label>
                   </div>
                 </div>
 
@@ -235,45 +314,14 @@
       </div>
     </div>
 
-    <!-- Modal Konfirmasi Kelas Paralel -->
-    <div v-if="showParallelModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      <div class="bg-[#1e293b] border border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <h3 class="text-base font-bold text-white mb-2">Terapkan ke Kelas Lain?</h3>
-        <p class="text-xs text-slate-400 mb-4">
-          Anda juga mengajar mata pelajaran ini di kelas lain. Centang kelas di bawah ini jika ingin menerapkan seluruh TP di elemen ini ke kelas tersebut secara bersamaan (sinkron):
-        </p>
-        
-        <div class="space-y-2 max-h-48 overflow-y-auto mb-6 pr-1">
-          <label v-for="cls in otherParallelClasses" :key="cls.id_kelas" class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 cursor-pointer transition-all">
-            <input type="checkbox" v-model="selectedParallelClasses" :value="cls.id_kelas" class="rounded border-white/10 text-indigo-600 focus:ring-indigo-500 bg-black/20 w-4 h-4">
-            <span class="text-sm font-semibold text-white">{{ cls.nama_kelas }}</span>
-          </label>
-        </div>
+    <!-- Modal parallel removed since selection is now inline inside the form -->
 
-        <div class="flex gap-3">
-          <button @click="closeModal" type="button" class="flex-1 px-4 py-2 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/5 transition-colors">
-            Batal
-          </button>
-          <button @click="submitWithClasses" type="button" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white transition-colors shadow-lg shadow-indigo-500/20">
-            Simpan Pemetaan
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Custom Toast -->
-    <transition enter-active-class="transition ease-out duration-300" enter-from-class="transform opacity-0 translate-y-2" enter-to-class="transform opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200" leave-from-class="transform opacity-100 translate-y-0" leave-to-class="transform opacity-0 translate-y-2">
-      <div v-if="toastMessage" class="fixed bottom-6 right-6 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 border border-emerald-400">
-        <span class="text-xl">✅</span>
-        <span class="font-bold text-sm">{{ toastMessage }}</span>
-      </div>
-    </transition>
   </AppLayout>
 </template>
 
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
@@ -305,14 +353,12 @@ const navigation = [
 ];
 
 // Dropdowns
-const selectedKelas = ref(props.kelasMapelList?.length > 0 ? props.kelasMapelList[0].id_kelas : '');
 const selectedMapel = ref('');
+const selectedKelasFilter = ref('');
 const activeSemester = ref(1);
 
 // State
 const isEditing = ref(false);
-const showParallelModal = ref(false);
-const selectedParallelClasses = ref([]);
 
 // Form editor
 const editorForm = ref({
@@ -323,42 +369,97 @@ const editorForm = ref({
   tps: [],
 });
 
-// Computed
-const uniqueClasses = computed(() => {
+// Computed properties
+const uniqueMapels = computed(() => {
   if (!props.kelasMapelList) return [];
   const seen = new Set();
-  return props.kelasMapelList.filter(item => {
-    if (seen.has(item.id_kelas)) return false;
-    seen.add(item.id_kelas);
-    return true;
+  const list = [];
+  props.kelasMapelList.forEach(item => {
+    if (!seen.has(item.id_mapel)) {
+      seen.add(item.id_mapel);
+      list.push({
+        id_mapel: item.id_mapel,
+        nama_mapel: item.nama_mapel
+      });
+    }
   });
+  return list;
 });
 
-const availableMapels = computed(() => {
-  if (!props.kelasMapelList) return [];
-  return props.kelasMapelList.filter(item => item.id_kelas === selectedKelas.value);
-});
-
-const otherParallelClasses = computed(() => {
+const classesForSelectedMapel = computed(() => {
   if (!props.kelasMapelList || !selectedMapel.value) return [];
-  return props.kelasMapelList.filter(item => 
-    item.id_mapel === selectedMapel.value && 
-    item.id_kelas !== selectedKelas.value
-  );
+  return props.kelasMapelList.filter(item => item.id_mapel === selectedMapel.value);
 });
+
+const mappingStatusList = computed(() => {
+  if (!props.kelasMapelList) return [];
+  
+  const mapelGroups = {};
+  
+  props.kelasMapelList.forEach(item => {
+    if (!mapelGroups[item.id_mapel]) {
+      mapelGroups[item.id_mapel] = {
+        id_mapel: item.id_mapel,
+        nama_mapel: item.nama_mapel,
+        classes: []
+      };
+    }
+    
+    // Check elementsList
+    const isMappedInElements = (props.elementsList || []).some(el => {
+      if (el.id_mapel !== item.id_mapel) return false;
+      return (el.tps || []).some(tp => {
+        const matchSemester = tp.semester === (activeSemester.value === 1 ? 'GANJIL' : 'GENAP');
+        const matchClass = (tp.classes || []).some(c => c.id_kelas === item.id_kelas);
+        return matchSemester && matchClass;
+      });
+    });
+    
+    // Check legacyTps
+    const isMappedInLegacy = (props.legacyTps || []).some(tp => {
+      if (tp.id_mapel !== item.id_mapel) return false;
+      const matchSemester = tp.semester === (activeSemester.value === 1 ? 'GANJIL' : 'GENAP');
+      const matchClass = (tp.classes || []).some(c => c.id_kelas === item.id_kelas);
+      return matchSemester && matchClass;
+    });
+    
+    const isMapped = isMappedInElements || isMappedInLegacy;
+    
+    mapelGroups[item.id_mapel].classes.push({
+      id_kelas: item.id_kelas,
+      nama_kelas: item.nama_kelas,
+      isMapped
+    });
+  });
+  
+  return Object.values(mapelGroups);
+});
+
+const selectMapelAndKelas = (id_mapel, id_kelas) => {
+  selectedMapel.value = id_mapel;
+  selectedKelasFilter.value = id_kelas;
+  
+  // Smooth scroll to the main editor panel
+  const el = document.getElementById('main-editor-panel');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
 
 const displayedElements = computed(() => {
-  if (!props.elementsList) return [];
+  if (!props.elementsList || !selectedMapel.value) return [];
   
   // Filter elemen untuk mapel yang aktif
   const filtered = props.elementsList.filter(el => el.id_mapel === selectedMapel.value);
   
-  // Filter TPs di dalam elemen agar sesuai semester dan kelas aktif
+  // Filter TPs di dalam elemen agar sesuai semester dan filter kelas
   return filtered.map(el => {
-    const activeTps = (el.tps || []).filter(tp => 
-      tp.semester === (activeSemester.value === 1 ? 'GANJIL' : 'GENAP') &&
-      (tp.classes || []).some(c => c.id_kelas === selectedKelas.value)
-    );
+    const activeTps = (el.tps || []).filter(tp => {
+      const matchSemester = tp.semester === (activeSemester.value === 1 ? 'GANJIL' : 'GENAP');
+      const matchClass = !selectedKelasFilter.value || 
+                         (tp.classes || []).some(c => c.id_kelas === selectedKelasFilter.value);
+      return matchSemester && matchClass;
+    });
     return {
       ...el,
       tps: activeTps
@@ -367,26 +468,29 @@ const displayedElements = computed(() => {
 });
 
 const displayedLegacyTps = computed(() => {
-  if (!props.legacyTps) return [];
-  return props.legacyTps.filter(tp => 
-    tp.id_mapel === selectedMapel.value && 
-    tp.semester === (activeSemester.value === 1 ? 'GANJIL' : 'GENAP') &&
-    (tp.classes || []).some(c => c.id_kelas === selectedKelas.value)
-  );
+  if (!props.legacyTps || !selectedMapel.value) return [];
+  return props.legacyTps.filter(tp => {
+    const matchSemester = tp.semester === (activeSemester.value === 1 ? 'GANJIL' : 'GENAP');
+    const matchClass = !selectedKelasFilter.value || 
+                       (tp.classes || []).some(c => c.id_kelas === selectedKelasFilter.value);
+    return matchSemester && matchClass;
+  });
 });
 
-// Watch selected class to automatically update subject dropdown
-watch(selectedKelas, (newVal) => {
-  const filtered = props.kelasMapelList.filter(item => item.id_kelas === newVal);
-  if (filtered.length > 0) {
-    selectedMapel.value = filtered[0].id_mapel;
-  } else {
-    selectedMapel.value = '';
+// Watch selected mapel to reset class filter
+watch(selectedMapel, () => {
+  selectedKelasFilter.value = '';
+});
+
+onMounted(() => {
+  if (uniqueMapels.value.length > 0) {
+    selectedMapel.value = uniqueMapels.value[0].id_mapel;
   }
-}, { immediate: true });
+});
 
 // Form editor handlers
 const startCreateNew = () => {
+  const allClassIds = classesForSelectedMapel.value.map(c => c.id_kelas);
   editorForm.value = {
     id_element: null,
     id_mapel: selectedMapel.value,
@@ -398,6 +502,7 @@ const startCreateNew = () => {
         kode_tp: 'TP-01',
         deskripsi_tp: '',
         semester: activeSemester.value === 1 ? 'GANJIL' : 'GENAP',
+        target_kelas: allClassIds, // Precheck all classes by default
         topics: [''],
       }
     ],
@@ -416,7 +521,6 @@ const startEdit = (element) => {
       kode_tp: tp.kode_tp,
       deskripsi_tp: tp.deskripsi_tp,
       semester: tp.semester,
-      // Map classes target
       target_kelas: tp.classes.map(c => c.id_kelas),
       topics: tp.topics ? tp.topics.map(t => t.nama_topik) : [''],
     })),
@@ -430,11 +534,13 @@ const cancelEdit = () => {
 
 const addNewTpInEditor = () => {
   const nextNum = editorForm.value.tps.length + 1;
+  const allClassIds = classesForSelectedMapel.value.map(c => c.id_kelas);
   editorForm.value.tps.push({
     id_tp: null,
     kode_tp: 'TP-' + String(nextNum).padStart(2, '0'),
     deskripsi_tp: '',
     semester: activeSemester.value === 1 ? 'GANJIL' : 'GENAP',
+    target_kelas: allClassIds, // Precheck all classes by default
     topics: [''],
   });
 };
@@ -451,68 +557,33 @@ const removeTopicInEditor = (tpIdx, tpcIdx) => {
   editorForm.value.tps[tpIdx].topics.splice(tpcIdx, 1);
 };
 
-const toastMessage = ref('');
-let toastTimeout = null;
-
-const showToast = (msg) => {
-  toastMessage.value = msg;
-  if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toastMessage.value = '';
-  }, 3000);
-};
-
 // Saving handlers
 const confirmSaveElement = () => {
   if (!editorForm.value.nama_elemen.trim() || !editorForm.value.deskripsi_cp.trim()) {
-    alert('Nama Elemen dan Deskripsi CP tidak boleh kosong!');
+    window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Nama Elemen dan Deskripsi CP tidak boleh kosong!', type: 'error' } }));
     return;
   }
 
   // Validasi TPs
   for (let tp of editorForm.value.tps) {
     if (!tp.deskripsi_tp.trim()) {
-      alert('Deskripsi TP tidak boleh kosong!');
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Deskripsi TP tidak boleh kosong!', type: 'error' } }));
+      return;
+    }
+    if (!tp.target_kelas || tp.target_kelas.length === 0) {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: `Kelas penerapan untuk ${tp.kode_tp} harus dipilih minimal satu!`, type: 'error' } }));
       return;
     }
   }
 
-  // Tampilkan modal jika ada kelas paralel
-  if (otherParallelClasses.value.length > 0) {
-    selectedParallelClasses.value = [];
-    showParallelModal.value = true;
-  } else {
-    submitElement([selectedKelas.value]);
-  }
+  submitElement();
 };
 
-const closeModal = () => {
-  showParallelModal.value = false;
-};
-
-const submitWithClasses = () => {
-  const classesToSave = [selectedKelas.value, ...selectedParallelClasses.value];
-  submitElement(classesToSave);
-  closeModal();
-};
-
-const submitElement = (classesArray) => {
-  // Untuk setiap TP dalam form, jika belum diset target_kelas-nya, set dengan classesArray
-  editorForm.value.tps.forEach(tp => {
-    // Jika edit, target_kelas bawaan dipertahankan, kecuali jika dicentang paralel
-    if (!tp.id_tp) {
-      tp.target_kelas = classesArray;
-    } else {
-      // Untuk update, sinkronkan kelas ke kelasArray
-      tp.target_kelas = classesArray;
-    }
-  });
-
+const submitElement = () => {
   router.post('/guru/pemetaan-materi', editorForm.value, {
     preserveScroll: true,
     onSuccess: () => {
       isEditing.value = false;
-      showToast('Pemetaan Elemen, CP, dan TP berhasil disimpan!');
     }
   });
 };

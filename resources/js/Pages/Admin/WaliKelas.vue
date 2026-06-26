@@ -6,17 +6,7 @@
     subtitle="Kelola guru pendamping untuk setiap rombongan belajar"
     :navigation="navigation"
   >
-    <!-- ALERT NOTIFICATION -->
-    <transition name="fade">
-      <div v-if="$page.props.flash?.success || successMessage" class="mb-6 p-4 rounded-xl border border-green-500/20 bg-green-500/10 text-green-400 text-sm flex items-center gap-3">
-        <span>✅</span> {{ $page.props.flash?.success || successMessage }}
-      </div>
-    </transition>
-    <transition name="fade">
-      <div v-if="$page.props.flash?.error" class="mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm flex items-center gap-3">
-        <span>⚠️</span> {{ $page.props.flash?.error }}
-      </div>
-    </transition>
+    <!-- Alert notification is handled globally by AppLayout toast -->
 
     <div class="flex justify-end mb-6">
       <button 
@@ -101,7 +91,6 @@ const props = defineProps({
 });
 
 const savingId = ref(null);
-const successMessage = ref('');
 
 const isTeacherAssigned = (guruId, currentClassId) => {
   if (!guruId) return false;
@@ -146,19 +135,13 @@ const navigation = [
 
 const updateWaliKelas = (cls) => {
   savingId.value = cls.id_kelas;
-  successMessage.value = '';
 
   router.post('/admin/wali-kelas', {
     id_kelas: cls.id_kelas,
     id_guru_wali: cls.id_guru_wali
   }, {
     preserveScroll: true,
-    onSuccess: () => {
-      savingId.value = null;
-      successMessage.value = `Penugasan wali kelas ${cls.nama_kelas} berhasil diperbarui!`;
-      setTimeout(() => successMessage.value = '', 3000);
-    },
-    onError: () => {
+    onFinish: () => {
       savingId.value = null;
     }
   });
@@ -176,12 +159,9 @@ const resetAll = () => {
   if (confirm("⚠️ PERINGATAN!\nApakah Anda yakin ingin MENGOSONGKAN SELURUH penugasan Wali Kelas di semua kelas?\nAksi ini tidak dapat dibatalkan!")) {
     isResettingAll.value = true;
     router.post('/admin/wali-kelas/reset', {}, {
-      onSuccess: () => {
+      onFinish: () => {
         isResettingAll.value = false;
-        successMessage.value = "Seluruh penugasan wali kelas berhasil dikosongkan!";
-        setTimeout(() => successMessage.value = '', 4000);
-      },
-      onError: () => isResettingAll.value = false
+      }
     });
   }
 };

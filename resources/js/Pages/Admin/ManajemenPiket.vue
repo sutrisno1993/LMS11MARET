@@ -53,19 +53,12 @@
       </div>
     </div>
 
-    <!-- Custom Toast -->
-    <transition enter-active-class="transition ease-out duration-300" enter-from-class="transform opacity-0 translate-y-2" enter-to-class="transform opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200" leave-from-class="transform opacity-100 translate-y-0" leave-to-class="transform opacity-0 translate-y-2">
-      <div v-if="toastMessage" class="fixed bottom-6 right-6 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 border border-emerald-400">
-        <span class="text-xl">✅</span>
-        <span class="font-bold text-sm">{{ toastMessage }}</span>
-      </div>
-    </transition>
   </AppLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
@@ -73,21 +66,11 @@ const props = defineProps({
   initialAssignments: Object,
 });
 
+const page = usePage();
 const hariList = ['SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
 
 // Clone assignments agar reaktif
 const assignments = ref(JSON.parse(JSON.stringify(props.initialAssignments)));
-
-const toastMessage = ref('');
-let toastTimeout = null;
-
-const showToast = (msg) => {
-  toastMessage.value = msg;
-  if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toastMessage.value = '';
-  }, 3000);
-};
 
 const navigation = [
   {
@@ -127,16 +110,10 @@ const navigation = [
 ];
 
 const updateSemuaPiket = () => {
-  router.post(route('piket.update'), {
+  router.post('/admin/piket', {
     assignments: assignments.value,
   }, {
     preserveScroll: true,
-    onSuccess: () => {
-      showToast('Seluruh jadwal piket berhasil disimpan!');
-    },
-    onError: () => {
-      alert('Terjadi kesalahan saat menyimpan jadwal.');
-    }
   });
 };
 </script>

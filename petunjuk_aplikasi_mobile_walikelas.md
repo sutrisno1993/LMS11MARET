@@ -208,3 +208,11 @@ Wali Kelas memiliki tab dashboard terpisah di menu navigasi bawah atau laci menu
 1. **Peringatan Ketidakhadiran Kritis**: Notifikasi otomatis ke ponsel Wali Kelas jika ada muridnya yang tidak masuk (Alfa) selama 3 hari berturut-turut atau akumulasi Alfa melebihi batas toleransi.
 2. **Peringatan Poin Pelanggaran**: Notifikasi instan apabila guru piket atau bagian kesiswaan menginput poin pelanggaran baru pada murid kelas perwaliannya.
 3. **Status Kelengkapan Nilai**: Pengingat berkala progres pengisian nilai rapor dari guru mata pelajaran lain menjelang penutupan batas waktu (lock-time) di kalender akademik.
+
+---
+
+## 6. Desain Antarmuka (UI/UX) Premium
+* **Font**: Gunakan font modern seperti **Inter** atau **Outfit** untuk keterbacaan data numerik yang jelas.
+* **Custom Toast / Snackbar (Sistem Notifikasi Terpusat)**: Seluruh umpan balik penyelesaian aksi (seperti Sukses Simpan Catatan Pembinaan, Sukses Kirim SP) maupun notifikasi kesalahan/peringatan (seperti peringatan "tidak ada data untuk diekspor" atau "fitur belum tersedia") **wajib** menggunakan *Toast Notification* atau *Snackbar* kustom (Hijau untuk sukses, Kuning untuk peringatan/info, Merah untuk error) yang diatur terpusat di level layout utama. **Sangat dilarang** menggunakan pop-up dialog bawaan browser (`alert()`) yang kaku dan mengganggu alur.
+* **Skeleton Loader**: Tampilkan efek bayangan animasi (*shimmer effect*) saat memuat halaman monitoring nilai siswa kelas perwalian.
+

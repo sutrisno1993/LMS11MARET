@@ -473,6 +473,26 @@ class GuruController extends Controller
                     ->groupBy('id_siswa');
             }
 
+            // Hitung absensi untuk kelas dan mapel ini
+            $totalSessions = 0;
+            $attendancesGrouped = collect();
+            if ($selectedKelas && $selectedMapel) {
+                $totalSessions = \App\Models\KbmSession::where('id_kelas', $selectedKelas)
+                    ->where('id_mapel', $selectedMapel)
+                    ->where('status_sesi', 'SELESAI')
+                    ->count();
+
+                $attendancesGrouped = \App\Models\StudentAttendance::whereIn('id_siswa', $studentsRaw->pluck('id_siswa'))
+                    ->where('status', 'HADIR')
+                    ->whereHas('kbmSession', function ($q) use ($selectedKelas, $selectedMapel) {
+                        $q->where('id_kelas', $selectedKelas)
+                          ->where('id_mapel', $selectedMapel)
+                          ->where('status_sesi', 'SELESAI');
+                    })
+                    ->get()
+                    ->groupBy('id_siswa');
+            }
+
             foreach ($studentsRaw as $siswa) {
                 $studentGrades = $grades->get($siswa->id_siswa) ?? collect();
                 $validScores = $studentGrades->pluck('nilai')->filter(fn($val) => $val !== null && $val !== '');
@@ -480,6 +500,9 @@ class GuruController extends Controller
                 $rataTP = $validScores->count() > 0 ? round($validScores->average()) : null;
 
                 $rc = $idClassSubject ? ($reportCards->get($siswa->id_siswa)?->first()) : null;
+
+                $presentSessions = isset($attendancesGrouped[$siswa->id_siswa]) ? $attendancesGrouped[$siswa->id_siswa]->count() : 0;
+                $nilaiAbsensi = $totalSessions > 0 ? round(($presentSessions / $totalSessions) * 100, 1) : 100.0;
 
                 $students[] = [
                     'id' => $siswa->id_siswa,
@@ -489,9 +512,17 @@ class GuruController extends Controller
                     'sas' => $rc ? $rc->nilai_sas : null,
                     'nilai_akhir' => $rc ? $rc->nilai_akhir : null,
                     'id_rapor' => $rc ? $rc->id_rapor : null,
+                    'absensi' => $nilaiAbsensi,
                 ];
             }
         }
+
+        $config = \App\Models\GradeConfig::find(1) ?? \App\Models\GradeConfig::first();
+        $bobotConfig = [
+            'formatif' => $config ? $config->bobot_formatif : 40,
+            'sumatif' => $config ? $config->bobot_sumatif : 40,
+            'absensi' => $config ? $config->bobot_absensi : 20,
+        ];
 
         return Inertia::render('Guru/NilaiAkhir', [
             'kelasList' => $kelasList,
@@ -499,6 +530,7 @@ class GuruController extends Controller
             'selectedKelas' => $selectedKelas,
             'selectedMapel' => $selectedMapel,
             'students' => $students,
+            'bobotConfig' => $bobotConfig,
         ]);
     }
 
@@ -517,6 +549,11 @@ class GuruController extends Controller
             ->where('id_mapel', $idMapel)
             ->firstOrFail();
 
+        $config = \App\Models\GradeConfig::find(1) ?? \App\Models\GradeConfig::first();
+        $bobotFormatif = $config ? $config->bobot_formatif : 40;
+        $bobotSumatif = $config ? $config->bobot_sumatif : 40;
+        $bobotAbsensi = $config ? $config->bobot_absensi : 20;
+
         foreach ($request->input('students') as $siswa) {
             $idSiswa = $siswa['id'];
             $sas = $siswa['sas'];
@@ -529,8 +566,25 @@ class GuruController extends Controller
                 continue;
             }
 
-            // Hitung nilai akhir dengan bobot 70% rata-rata TP + 30% SAS
-            $nilaiAkhir = round(($rataTP * 0.7) + ($sas * 0.3));
+            // Hitung persentase kehadiran (Absensi)
+            $totalSessions = \App\Models\KbmSession::where('id_kelas', $idKelas)
+                ->where('id_mapel', $idMapel)
+                ->where('status_sesi', 'SELESAI')
+                ->count();
+
+            $presentSessions = \App\Models\StudentAttendance::where('id_siswa', $idSiswa)
+                ->where('status', 'HADIR')
+                ->whereHas('kbmSession', function ($q) use ($idKelas, $idMapel) {
+                    $q->where('id_kelas', $idKelas)
+                      ->where('id_mapel', $idMapel)
+                      ->where('status_sesi', 'SELESAI');
+                })
+                ->count();
+
+            $nilaiAbsensi = $totalSessions > 0 ? round(($presentSessions / $totalSessions) * 100, 1) : 100.0;
+
+            // Hitung nilai akhir menggunakan bobot dynamic dari GradeConfig
+            $nilaiAkhir = round(($rataTP * $bobotFormatif + $sas * $bobotSumatif + $nilaiAbsensi * $bobotAbsensi) / 100);
 
             \App\Models\ReportCard::updateOrCreate(
                 [

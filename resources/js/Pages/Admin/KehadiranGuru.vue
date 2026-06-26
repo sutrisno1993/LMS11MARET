@@ -83,7 +83,7 @@ const reloadLaporan = () => {
 };
 
 const exportExcel = () => {
-  alert('Fitur Export Excel akan segera hadir.');
+  window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Fitur Export Excel akan segera hadir.', type: 'info' } }));
 };
 
 const navigation = [

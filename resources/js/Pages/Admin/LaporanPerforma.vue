@@ -291,7 +291,10 @@ const downloadExcel = () => {
   if (isWali) data = props.laporanWaliKelas;
   if (isSiswa) data = props.laporanSiswa;
   
-  if (data.length === 0) return alert('Tidak ada data untuk diekspor!');
+  if (data.length === 0) {
+    window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Tidak ada data untuk diekspor!', type: 'warning' } }));
+    return;
+  }
 
   let csvContent = "data:text/csv;charset=utf-8,";
   

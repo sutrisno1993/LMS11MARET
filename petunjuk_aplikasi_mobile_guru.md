@@ -35,7 +35,7 @@ Aplikasi mobile menggunakan navigasi bawah (*Bottom Navigation Bar*) untuk akses
 > * **Wali Kelas**: Semua menu dan komponen di atas akan ditampilkan secara penuh.
 
 ### Menu Drawer (Fitur Tambahan):
-* **Pemetaan Materi**: Kelola Elemen Pembelajaran, Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), dan Sub-Materi (Topik) per Mata Pelajaran.
+* **Pemetaan Materi**: Kelola Elemen Pembelajaran, Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), dan Sub-Materi (Topik) berbasis Mapel (Mata Pelajaran). Dilengkapi dengan status pemetaan interaktif per kelas (Ready/Belum) untuk semester aktif.
 * **Tugas Piket**: Mengelola presensi Guru Piket. Menggunakan sistem *Multi-Hari* di mana seorang guru bisa ditugaskan piket pada lebih dari 1 hari. Menu ini akan dinamis menampilkan shift pagi/siang sesuai jadwal hari berjalan guru tersebut.
 
 ---
@@ -244,12 +244,18 @@ Fitur untuk memantau, mencatat, dan menangani kasus siswa kelas perwalian yang b
 ---
 
 ### F. Pemetaan Materi (CP & TP)
-Fitur untuk mengelola pemetaan kurikulum merdeka (Elemen, CP, TP, dan Sub-Materi/Topik) yang diampu oleh Guru.
+Fitur untuk mengelola pemetaan kurikulum merdeka (Elemen, CP, TP, dan Sub-Materi/Topik) yang diampu oleh Guru secara Mapel-Centric.
 * **Penyajian Data & Alur Kerja**:
   * **Halaman Utama Pemetaan**: Menampilkan daftar Elemen yang telah dibuat dengan visualisasi berbentuk kartu lipat (*Accordion/Expandable List*). Setiap kartu menampilkan nama elemen, CP, dan daftar TP di dalamnya.
-  * **Penyaring Kelas & Mapel**: Di bagian atas terdapat drop-down filter untuk memilih Mata Pelajaran dan Kelas yang diampu oleh Guru.
+  * **Status Pemetaan Mengajar (Interactive Widget)**: Widget sidebar kiri yang mengelompokkan jadwal mengajar Guru berdasarkan Mata Pelajaran, dengan indikator status glassmorphic untuk semester aktif:
+    * **Ready (Green Glow)**: TP sudah terisi minimal 1 di semester tersebut.
+    * **Belum (Red Glow)**: Belum ada TP yang didefinisikan sama sekali di semester tersebut.
+    * *Interaktivitas*: Mengklik kelas/mapel pada widget ini otomatis menyetel filter header dan melakukan smooth scroll ke area panel editor.
+  * **Penyaring Header (Mapel-Centric)**: 
+    * **Dropdown Utama**: Memilih Mata Pelajaran (Mapel) yang diampu.
+    * **Dropdown Kedua (Filter Kelas)**: Berfungsi menyaring tampilan data. Pilihan kelas yang muncul disaring secara dinamis hanya untuk kelas yang diajar Guru tersebut pada Mapel terpilih.
   * **Form Tambah/Edit Elemen**: Form input bersih menggunakan *Single-page Form* untuk data Elemen (Nama Elemen, Deskripsi CP) dan komponen dinamis *List View* di bawahnya untuk menambahkan multi-TP.
-  * **Kelola Tujuan Pembelajaran (TP)**: Di setiap item TP, guru dapat menentukan kode TP, deskripsi TP, semester (Ganjil/Genap), memilih target kelas (menggunakan *Multi-select Chip*), dan menambah daftar sub-materi/topik (berbasis chip dinamis yang bisa ditambah atau dihapus).
+  * **Kelola Tujuan Pembelajaran (TP)**: Di setiap item TP, guru dapat menentukan kode TP, deskripsi TP, semester (Ganjil/Genap), menentukan target penerapan kelas secara inline melalui checkbox dinamis (semua kelas paralel tercentang otomatis secara default untuk kemudahan input), dan menambah daftar sub-materi/topik.
 * **Integrasi API**: `GET /api/teacher/pemetaan-materi`
   * **Skema JSON Response**:
     ```json
@@ -341,7 +347,7 @@ Untuk meningkatkan fungsionalitas, aplikasi mobile guru harus dilengkapi dengan 
 
 ## 6. Desain Antarmuka (UI/UX) Premium
 * **Font**: Gunakan font modern seperti **Inter** atau **Outfit** untuk keterbacaan data numerik (angka nilai rapor) yang jelas.
-* **Custom Toast / Snackbar (Notifikasi Sukses)**: Seluruh umpan balik penyelesaian aksi (seperti Simpan Nilai, Catat Tindakan Pembinaan, Simpan Pemetaan Materi) **wajib** menggunakan *Toast Notification* atau *Snackbar* berwarna hijau yang melayang di bagian bawah/atas layar dan hilang otomatis dalam 3 detik. **Dilarang** menggunakan pop-up dialog/alert sistem bawaan yang mengganggu alur (*flow*) interaksi.
+* **Custom Toast / Snackbar (Sistem Notifikasi Terpusat)**: Seluruh umpan balik penyelesaian aksi (seperti Sukses Simpan Nilai, Catat Tindakan Pembinaan, Simpan Pemetaan Materi) maupun notifikasi kesalahan/validasi **wajib** menggunakan *Toast Notification* atau *Snackbar* kustom (Hijau untuk sukses, Kuning untuk peringatan/informasi, Merah untuk error) yang diatur terpusat di level layout utama (`AppLayout.vue`). Umpan balik dikirimkan secara reaktif via session flash/event router. **Sangat dilarang** menggunakan pop-up dialog bawaan browser (`alert()`) yang mengganggu alur (*flow*) interaksi pengguna.
 * **Feedback Sentuhan (Haptic Feedback)**: Berikan getaran halus saat guru mengubah status kehadiran siswa atau memberikan nilai remedi untuk memperkuat konfirmasi input.
 * **Skeleton Loader**: Tampilkan efek bayangan animasi (*shimmer effect*) saat memuat daftar nilai siswa, hindari penggunaan spinner loading tradisional berputar yang membosankan.
 

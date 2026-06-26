@@ -26,15 +26,20 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="rounded-2xl border border-white/8 p-4 bg-white/2">
           <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Bobot Nilai Saat Ini</div>
-          <div class="mt-2 flex items-center gap-3">
-            <div class="flex-1 text-center bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-2">
-              <div class="text-lg font-bold text-indigo-400">70%</div>
-              <div class="text-[9px] text-slate-400 uppercase">Rata-rata TP</div>
+          <div class="mt-2 flex items-center gap-1.5">
+            <div class="flex-1 text-center bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-1.5">
+              <div class="text-sm font-black text-indigo-400">{{ bobotConfig?.formatif }}%</div>
+              <div class="text-[8px] text-slate-400 uppercase">Formatif (TP)</div>
             </div>
             <div class="text-slate-600 font-bold">+</div>
-            <div class="flex-1 text-center bg-green-500/10 border border-green-500/20 rounded-lg p-2">
-              <div class="text-lg font-bold text-green-400">30%</div>
-              <div class="text-[9px] text-slate-400 uppercase">Ujian SAS</div>
+            <div class="flex-1 text-center bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-1.5">
+              <div class="text-sm font-black text-emerald-400">{{ bobotConfig?.sumatif }}%</div>
+              <div class="text-[8px] text-slate-400 uppercase">Sumatif (SAS)</div>
+            </div>
+            <div class="text-slate-600 font-bold">+</div>
+            <div class="flex-1 text-center bg-amber-500/10 border border-amber-500/20 rounded-lg p-1.5">
+              <div class="text-sm font-black text-amber-400">{{ bobotConfig?.absensi }}%</div>
+              <div class="text-[8px] text-slate-400 uppercase">Absensi</div>
             </div>
           </div>
         </div>
@@ -79,13 +84,16 @@
               <tr class="bg-white/4 border-b border-white/8">
                 <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 w-12 text-center">No</th>
                 <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8">Nama Siswa</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center w-32" title="Rata-rata dari nilai grid Sumatif TP">
-                  Rata-rata TP<br/><span class="text-indigo-400">(70%)</span>
+                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center w-28" title="Rata-rata dari nilai grid Sumatif TP">
+                  Rata-rata TP<br/><span class="text-indigo-400">({{ bobotConfig?.formatif }}%)</span>
                 </th>
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center w-32 bg-green-500/5">
-                  Nilai SAS<br/><span class="text-green-400">(30%)</span>
+                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center w-28 bg-green-500/5">
+                  Nilai SAS<br/><span class="text-green-400">({{ bobotConfig?.sumatif }}%)</span>
                 </th>
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center w-32 bg-indigo-500/10">
+                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center w-24 bg-amber-500/5">
+                  Absensi<br/><span class="text-amber-400">({{ bobotConfig?.absensi }}%)</span>
+                </th>
+                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-white/8 text-center w-28 bg-indigo-500/10">
                   NILAI RAPOR<br/>(Akhir)
                 </th>
                 <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aksi</th>
@@ -110,7 +118,7 @@
                 </td>
 
                 <!-- Nilai SAS (Inputable) -->
-                <td class="p-0 border-r border-white/8 bg-green-500/5 relative">
+                <td class="p-0 border-r border-white/8 bg-green-500/5 relative w-28">
                   <input
                     v-model.number="siswa.sas"
                     type="number" min="0" max="100"
@@ -120,8 +128,13 @@
                   <div class="h-12"></div>
                 </td>
 
+                <!-- Absensi (Readonly) -->
+                <td class="px-4 py-3 text-center border-r border-white/8 bg-amber-500/5 font-mono text-sm text-amber-400">
+                  {{ siswa.absensi }}%
+                </td>
+ 
                 <!-- Calculated Rapor -->
-                <td class="px-4 py-3 text-center border-r border-white/8 bg-indigo-500/10 font-black text-lg" :class="kalkulasiRapor(siswa) < 70 ? 'text-red-400' : 'text-white'">
+                <td class="px-4 py-3 text-center border-r border-white/8 bg-indigo-500/10 font-black text-lg text-white">
                   {{ kalkulasiRapor(siswa) }}
                 </td>
 
@@ -139,14 +152,6 @@
 
     </div>
 
-    <!-- Custom Toast -->
-    <transition enter-active-class="transition ease-out duration-300" enter-from-class="transform opacity-0 translate-y-2" enter-to-class="transform opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200" leave-from-class="transform opacity-100 translate-y-0" leave-to-class="transform opacity-0 translate-y-2">
-      <div v-if="toastMessage" class="fixed bottom-6 right-6 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 border border-emerald-400">
-        <span class="text-xl">✅</span>
-        <span class="font-bold text-sm">{{ toastMessage }}</span>
-      </div>
-    </transition>
-
   </AppLayout>
 </template>
 
@@ -161,6 +166,7 @@ const props = defineProps({
   selectedKelas: [String, Number],
   selectedMapel: [String, Number],
   students: Array,
+  bobotConfig: Object,
 });
 
 const navigation = [
@@ -223,13 +229,17 @@ watch(() => props.selectedMapel, (val) => {
   formNilai.id_mapel = val;
 });
 
-const bobotTP = 0.7;
-const bobotSAS = 0.3;
-
 const kalkulasiRapor = (siswa) => {
   if (siswa.sas === null || siswa.sas === '') return '-';
-  if (siswa.rataTP === null || siswa.rataTP === '') return Math.round(siswa.sas * bobotSAS);
-  const final = (siswa.rataTP * bobotTP) + (siswa.sas * bobotSAS);
+  const formatifBobot = props.bobotConfig?.formatif ?? 40;
+  const sumatifBobot = props.bobotConfig?.sumatif ?? 40;
+  const absensiBobot = props.bobotConfig?.absensi ?? 20;
+
+  const rataTP = siswa.rataTP || 0;
+  const sas = siswa.sas || 0;
+  const absensi = siswa.absensi || 100;
+
+  const final = (rataTP * formatifBobot + sas * sumatifBobot + absensi * absensiBobot) / 100;
   return Math.round(final);
 };
 
@@ -242,23 +252,9 @@ const rataRataKelas = computed(() => {
   return (sum / activeScores.length).toFixed(1);
 });
 
-const toastMessage = ref('');
-let toastTimeout = null;
-
-const showToast = (msg) => {
-  toastMessage.value = msg;
-  if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toastMessage.value = '';
-  }, 3000);
-};
-
 const simpanNilaiRapor = () => {
   formNilai.post('/guru/nilai-akhir', {
     preserveScroll: true,
-    onSuccess: () => {
-      showToast('Nilai Rapor berhasil disinkronisasi ke database!');
-    }
   });
 };
 </script>
