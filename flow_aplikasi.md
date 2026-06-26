@@ -48,7 +48,7 @@ Garda terdepan yang menggerakkan KBM.
   - `Dashboard` (`/guru/dashboard`): Menampilkan jadwal hari ini dan layar **Pembuat QR Code**.
   - `Sesi KBM`: Form input Jurnal Materi yang diajarkan.
 - **Evaluasi & Penilaian**
-  - `Pemetaan Materi`: Menginput Capaian Pembelajaran (CP) dan Tujuan Pembelajaran (TP) untuk semester Ganjil & Genap (Sesuai panduan Kurikulum Merdeka).
+  - `Pemetaan Materi`: Menginput Capaian Pembelajaran (CP) dan Tujuan Pembelajaran (TP) secara Mapel-Centric (berdasarkan mata pelajaran terpilih dengan filter kelas dinamis yang diajar). Dilengkapi dengan panel *Status Pemetaan Mengajar* interaktif (Ready/Belum) per kelas untuk mempermudah monitoring kelengkapan semester aktif.
   - `Bank Soal & Ujian Live`: Modul upload soal Pilihan Ganda (A-E) untuk Asesmen KBM secara langsung (*Live*). Nilainya otomatis masuk ke Daftar Nilai (Dafnil).
   - `Nilai Sumatif`: Form input nilai tugas dan ujian (bisa manual atau otomatis dari Ujian Live).
   - `Nilai Akhir`: Kalkulasi dan pembobotan nilai akhir.
@@ -143,7 +143,7 @@ Pengembangan sistem LMS ini tidak sekadar untuk digitalisasi bahan ajar, melaink
    Dengan adanya fitur `Ujian Live` dan rekap `Nilai Sumatif` yang langsung tampil di *dashboard* siswa, orang tua dan siswa tidak perlu menunggu pembagian rapor akhir semester untuk mengetahui bahwa nilainya anjlok. Mereka bisa melakukan perbaikan secepat mungkin.
 
 5. **Kepatuhan Total pada "Kurikulum Merdeka"**
-   Aplikasi ini memaksa guru untuk mengajar secara terstruktur. Guru tidak bisa sekadar masuk kelas tanpa arah; mereka dituntut untuk melakukan **Pemetaan Materi (CP & TP)** di awal, dan setiap jurnal KBM serta asesmen *Live* harus terikat pada peta materi tersebut. Hal ini menjamin mutu pendidikan di SMK 11 Maret memenuhi standar nasional.
+   Aplikasi ini memaksa guru untuk mengajar secara terkommendasi dan terstruktur. Guru dituntut untuk melakukan **Pemetaan Materi (CP & TP)** di awal. Kelengkapan pemetaan ini dipantau secara real-time melalui panel *Status Pemetaan Mengajar* interaktif di sisi kiri (Ready vs Belum). Setiap jurnal KBM serta asesmen *Live* diikat langsung pada peta materi tersebut demi menjamin ketercapaian kompetensi nasional.
 
 6. **Pengalaman Pengguna (UI/UX) Tanpa Interupsi**
-   Semua notifikasi keberhasilan di seluruh sistem (baik panel Admin, Guru, Wali Kelas, maupun Siswa) distandardisasi menggunakan **Custom Toast / Snackbar Notifikasi Melayang** berwarna hijau yang hilang secara otomatis. Dilarang keras menggunakan pop-up `alert()` bawaan browser atau OS yang menghalangi produktivitas dan alur interaksi pengguna.
+   Semua notifikasi keberhasilan, peringatan, maupun pesan kesalahan di seluruh sistem (baik panel Admin, Guru, Wali Kelas, maupun Siswa) dikelola secara terpusat di level layout utama (`AppLayout.vue`) dan disajikan menggunakan **Custom Toast / Snackbar kustom** yang melayang dan hilang secara otomatis dalam 3 detik. Dilarang keras menggunakan pop-up `alert()` bawaan browser atau OS pada skenario apa pun (seperti kegagalan pengisian form, kegagalan simpan ujian live, atau peringatan ekspor data kosong) demi kelancaran alur produktivitas pengguna.
