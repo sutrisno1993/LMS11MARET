@@ -30,6 +30,9 @@ migrate:
 migrate-fresh:
 	docker compose exec app php artisan migrate:fresh --seed
 
+migrate-all:
+	docker compose exec app sh -c "DB_DATABASE=lms_db php artisan migrate --force && DB_DATABASE=lms_bekasi php artisan migrate --force"
+
 artisan:
 	docker compose exec app php artisan $(cmd)
 

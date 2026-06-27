@@ -19,7 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment(['local', 'development']) && \Illuminate\Support\Facades\Cache::has('time_offset')) {
+        if (app()->environment(['local', 'development']) 
+            && \Illuminate\Support\Facades\Schema::hasTable('cache') 
+            && \Illuminate\Support\Facades\Cache::has('time_offset')
+        ) {
             $offset = \Illuminate\Support\Facades\Cache::get('time_offset');
             \Carbon\Carbon::setTestNow(function () use ($offset) {
                 return \Carbon\Carbon::parse(date('Y-m-d H:i:s', time() + $offset));
