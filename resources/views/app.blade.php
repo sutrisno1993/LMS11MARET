@@ -10,6 +10,29 @@
         <meta name="description" content="Learning Management System SMK 11 Maret — Monitoring KBM Real-Time, Presensi QR, Penilaian Kurikulum Merdeka.">
         <meta name="theme-color" content="#0B0F1A">
 
+        <!-- Tema Dinamis dari Database -->
+        @php
+            try {
+                $setting = \Illuminate\Support\Facades\DB::table('app_settings')->first();
+                $bg = $setting ? $setting->color_bg : '#0B0F1A';
+                $sidebar = $setting ? $setting->color_sidebar : '#111827';
+                $card = $setting ? $setting->color_card : '#1A2035';
+                $branchName = $setting ? $setting->branch_name : config('app.name', 'LMS SMK 11 Maret');
+            } catch (\Exception $e) {
+                $bg = '#0B0F1A';
+                $sidebar = '#111827';
+                $card = '#1A2035';
+                $branchName = config('app.name', 'LMS SMK 11 Maret');
+            }
+        @endphp
+        <style>
+            :root {
+                --bg: {{ $bg }} !important;
+                --sidebar: {{ $sidebar }} !important;
+                --card: {{ $card }} !important;
+            }
+        </style>
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
