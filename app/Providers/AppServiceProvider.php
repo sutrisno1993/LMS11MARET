@@ -19,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (env('APP_ENV') !== 'local') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         if (app()->environment(['local', 'development']) 
             && \Illuminate\Support\Facades\Schema::hasTable('cache') 
             && \Illuminate\Support\Facades\Cache::has('time_offset')
