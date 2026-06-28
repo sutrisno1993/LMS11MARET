@@ -31,9 +31,8 @@
               <li>Terdapat 4 kolom wajib berurutan: <code class="text-indigo-300">NIS, NISN, Nama Siswa, Nama Kelas</code></li>
               <li>Baris pertama (Header) akan diabaikan oleh sistem.</li>
               <li>
-                <strong>Nama Kelas</strong> bersifat dinamis. Jika Anda memasukkan nama kelas baru (misal: "X DKV 1"), sistem akan <strong class="text-emerald-400">otomatis membuatkan kelas tersebut</strong>.
+                <strong>Nama Kelas</strong> harus persis sama dengan data di sistem. Berikut daftar nama kelas yang valid:
                 <div class="mt-2 p-2 bg-black/20 rounded border border-white/5 max-h-24 overflow-y-auto text-[10px] font-mono text-indigo-300 leading-relaxed">
-                  Daftar kelas saat ini: 
                   <span v-for="(cls, index) in classes" :key="cls.id_kelas">
                     {{ cls.nama_kelas }}<span v-if="index < classes.length - 1">, </span>
                   </span>
