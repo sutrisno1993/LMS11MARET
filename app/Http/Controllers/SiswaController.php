@@ -350,45 +350,30 @@ class SiswaController extends Controller
 
                 $nilaiAbsensi = $totalSessions > 0 ? round(($presentSessions / $totalSessions) * 100, 1) : 100.0;
 
-                // 4. Ambil Nilai SAS dari ReportCard
+                // 4. Ambil Nilai SAS & Rapor Resmi dari ReportCard
                 $raporObj = \App\Models\ReportCard::where('id_siswa', $siswa->id_siswa)
                     ->where('id_class_subject', $cs->id_class_subject)
                     ->first();
                 $nilaiSAS = $raporObj ? $raporObj->nilai_sas : 0;
 
-                // 5. Kalkulasi Nilai Rapor Akhir
+                // 5. Kalkulasi Estimasi Nilai Akhir (Preview)
                 $nilaiAkhir = ($rataTP * $bobotFormatif + $nilaiSAS * $bobotSumatif + $nilaiAbsensi * $bobotAbsensi) / 100;
                 $nilaiAkhir = round($nilaiAkhir);
+                
+                // Jika Guru sudah pernah mensubmit nilai akhir secara resmi, GUNAKAN NILAI GURU (Read-only)
+                if ($raporObj && $raporObj->nilai_akhir !== null) {
+                    $nilaiAkhir = $raporObj->nilai_akhir;
+                }
 
-                // Update ReportCard jika ada perubahan nilai_akhir secara real-time
-                if ($raporObj) {
-                    $raporObj->nilai_akhir = $nilaiAkhir;
-                    // Auto-generate atau simpan deskripsi jika kosong
-                    if (empty($raporObj->deskripsi_capaian)) {
-                        $sortedDetails = collect($details)->whereNotNull('nilai')->sortByDesc('nilai');
-                        if ($sortedDetails->count() > 0) {
-                            $highest = $sortedDetails->first();
-                            $lowest = $sortedDetails->last();
-                            $raporObj->deskripsi_capaian = "Menunjukkan penguasaan yang sangat baik dalam " . $highest['deskripsi'] . ". Namun, perlu pendampingan lebih lanjut pada " . $lowest['deskripsi'] . ".";
-                        }
-                    }
-                    $raporObj->save();
-                } else {
-                    // Buat ReportCard baru jika belum ada
-                    $desc = "";
+                // Generate deskripsi capaian dinamis HANYA UNTUK DITAMPILKAN (Bukan disimpan ke database)
+                $desc = $raporObj->deskripsi_capaian ?? '';
+                if (empty($desc)) {
                     $sortedDetails = collect($details)->whereNotNull('nilai')->sortByDesc('nilai');
                     if ($sortedDetails->count() > 0) {
                         $highest = $sortedDetails->first();
                         $lowest = $sortedDetails->last();
                         $desc = "Menunjukkan penguasaan yang sangat baik dalam " . $highest['deskripsi'] . ". Namun, perlu pendampingan lebih lanjut pada " . $lowest['deskripsi'] . ".";
                     }
-                    $raporObj = \App\Models\ReportCard::create([
-                        'id_siswa' => $siswa->id_siswa,
-                        'id_class_subject' => $cs->id_class_subject,
-                        'nilai_sas' => 0,
-                        'nilai_akhir' => $nilaiAkhir,
-                        'deskripsi_capaian' => $desc,
-                    ]);
                 }
 
                 $nilaiList[] = [
@@ -399,7 +384,7 @@ class SiswaController extends Controller
                     'rataTP' => $rataTP,
                     'sas' => $nilaiSAS,
                     'absensi' => $nilaiAbsensi,
-                    'deskripsi' => $raporObj->deskripsi_capaian ?? 'Belum ada deskripsi capaian.',
+                    'deskripsi' => $desc ?: 'Belum ada deskripsi capaian.',
                     'details' => $details,
                     'expanded' => false
                 ];
