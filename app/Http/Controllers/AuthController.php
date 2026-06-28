@@ -40,7 +40,6 @@ class AuthController extends Controller
         $request->validate([
             'no_wa' => ['required'],
             'password' => ['required'],
-            'intent' => ['required', 'in:guru,walikelas'],
         ]);
 
         $teacher = \App\Models\Teacher::where('no_wa', $request->no_wa)->first();
@@ -48,12 +47,7 @@ class AuthController extends Controller
             return back()->withErrors(['no_wa' => 'Nomor WhatsApp tidak ditemukan.'])->onlyInput('no_wa');
         }
 
-        if ($request->intent === 'walikelas') {
-            $isWaliKelas = \App\Models\Clas::where('id_guru_wali', $teacher->id_guru)->exists();
-            if (!$isWaliKelas) {
-                return back()->withErrors(['no_wa' => 'Anda tidak terdaftar sebagai Wali Kelas.']);
-            }
-        }
+
 
         $user = \App\Models\User::where('id_guru', $teacher->id_guru)->first();
         if (!$user) {
@@ -71,11 +65,6 @@ class AuthController extends Controller
             Auth::login($user);
             $request->session()->regenerate();
             
-            session(['login_intent' => $request->intent]);
-
-            if ($request->intent === 'walikelas') {
-                return redirect()->route('walikelas.dashboard');
-            }
             return redirect()->route('guru.dashboard');
         }
 

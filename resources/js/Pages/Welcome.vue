@@ -18,7 +18,12 @@
 
     <!-- Portal Card -->
     <div class="relative z-10 w-full max-w-md px-4">
-      <div class="glass-card p-10 shadow-2xl shadow-black/50 rounded-3xl animate-fade-in" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05);">
+      <div class="glass-card relative p-10 shadow-2xl shadow-black/50 rounded-3xl animate-fade-in" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05);">
+
+        <!-- Admin Hidden Login -->
+        <Link href="/login/admin" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors text-lg opacity-50 hover:opacity-100" title="Admin Login">
+          ⚙️
+        </Link>
 
         <!-- Logo -->
         <div class="text-center mb-9">
@@ -36,30 +41,12 @@
           <label class="block text-center text-xs font-semibold text-slate-500 uppercase tracking-wider mb-6">Pilih Jalur Masuk</label>
           <div class="grid grid-cols-2 gap-4">
             <Link
-              href="/login/admin"
-              :class="['flex flex-col items-center justify-center p-4 rounded-2xl border bg-white/5 border-white/10 text-slate-300 transition-all duration-300 hover:-translate-y-1',
-                       isBekasi ? 'hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-white' : 'hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-white']"
-            >
-              <span class="text-3xl mb-2">⚙️</span>
-              <span class="text-xs font-medium">Admin Kurikulum</span>
-            </Link>
-            
-            <Link
               href="/login/guru"
               :class="['flex flex-col items-center justify-center p-4 rounded-2xl border bg-white/5 border-white/10 text-slate-300 transition-all duration-300 hover:-translate-y-1',
                        isBekasi ? 'hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-white' : 'hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-white']"
             >
               <span class="text-3xl mb-2">📚</span>
-              <span class="text-xs font-medium">Guru</span>
-            </Link>
-            
-            <Link
-              href="/login/walikelas"
-              :class="['flex flex-col items-center justify-center p-4 rounded-2xl border bg-white/5 border-white/10 text-slate-300 transition-all duration-300 hover:-translate-y-1',
-                       isBekasi ? 'hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-white' : 'hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-white']"
-            >
-              <span class="text-3xl mb-2">🏠</span>
-              <span class="text-xs font-medium">Wali Kelas</span>
+              <span class="text-xs font-medium">Guru / Walas</span>
             </Link>
             
             <Link

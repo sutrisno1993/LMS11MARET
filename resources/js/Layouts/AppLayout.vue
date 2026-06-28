@@ -269,8 +269,8 @@ const resolvedNavigation = computed(() => {
         ],
       },
     ];
-  } else if (url.startsWith('/guru')) {
-    return [
+  } else if (url.startsWith('/guru') || url.startsWith('/walikelas')) {
+    const guruMenu = [
       {
         label: 'KBM (Kegiatan Belajar Mengajar)',
         items: [
@@ -297,10 +297,10 @@ const resolvedNavigation = computed(() => {
         ],
       },
     ];
-  } else if (url.startsWith('/walikelas')) {
-    return [
-      {
-        label: 'Perwalian',
+
+    if (page.props.auth?.user?.is_walikelas) {
+      guruMenu.push({
+        label: 'Wali Kelas',
         items: [
           { href: '/walikelas/dashboard', icon: '🏠', label: 'Dashboard Kelas' },
           { href: '/walikelas/jurnal', icon: '📓', label: 'Jurnal KBM Kelas' },
@@ -308,8 +308,10 @@ const resolvedNavigation = computed(() => {
           { href: '/walikelas/p5-assessment', icon: '🌱', label: 'Asesmen P5' },
           { href: '/walikelas/reset-requests', icon: '🔑', label: 'Reset Password' },
         ],
-      },
-    ];
+      });
+    }
+
+    return guruMenu;
   } else if (url.startsWith('/siswa')) {
     return [
       {

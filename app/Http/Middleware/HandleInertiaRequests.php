@@ -52,6 +52,7 @@ class HandleInertiaRequests extends Middleware
                     'role' => $request->user()->role,
                     'id_guru' => $request->user()->id_guru,
                     'id_siswa' => $request->user()->id_siswa,
+                    'is_walikelas' => $request->user()->role === 'TEACHER' && \App\Models\Clas::where('id_guru_wali', $request->user()->id_guru)->exists(),
                 ] : null,
             ],
             'flash' => [

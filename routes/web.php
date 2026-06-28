@@ -16,9 +16,6 @@ Route::get('/', function () {
         $role = Auth::user()->role;
         if ($role === 'ADMIN') return redirect()->route('admin.dashboard');
         if ($role === 'TEACHER') {
-            if (session('login_intent') === 'walikelas') {
-                return redirect()->route('walikelas.dashboard');
-            }
             return redirect()->route('guru.dashboard');
         }
         if ($role === 'STUDENT') return redirect()->route('siswa.dashboard');
@@ -54,12 +51,8 @@ Route::middleware('guest')->group(function () {
     })->name('login.admin');
     
     Route::get('/login/guru', function () {
-        return Inertia::render('Auth/LoginTeacher', ['intent' => 'guru']);
+        return Inertia::render('Auth/LoginTeacher');
     })->name('login.guru');
-    
-    Route::get('/login/walikelas', function () {
-        return Inertia::render('Auth/LoginTeacher', ['intent' => 'walikelas']);
-    })->name('login.walikelas');
     
     Route::get('/login/siswa', function () {
         return Inertia::render('Auth/LoginStudent');
