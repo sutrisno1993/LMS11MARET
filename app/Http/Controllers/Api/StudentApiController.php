@@ -82,6 +82,8 @@ class StudentApiController extends Controller
                             'mapel' => $session->subject->nama_mapel ?? 'Unknown',
                             'guru' => $session->guruAktual->nama_guru ?? 'Unknown',
                             'jam_ke' => (string) $session->jam_ke,
+                            'waktu_mulai' => substr($jp->waktu_mulai, 0, 5),
+                            'waktu_selesai' => substr($jp->waktu_selesai, 0, 5),
                             'status' => $session->status_guru, // PENDING, HADIR, TERLAMBAT, ALPA, DISPENSASI
                             'sisa_menit' => $sisaMenit,
                         ];
