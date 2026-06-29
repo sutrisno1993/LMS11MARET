@@ -41,6 +41,14 @@ class TahunAjaranController extends Controller
      */
     public function execute(Request $request)
     {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->password, auth()->user()->password)) {
+            return redirect()->back()->with('error', 'Password admin yang dimasukkan salah! Ganti tahun ajaran dibatalkan.');
+        }
+
         DB::beginTransaction();
 
         try {

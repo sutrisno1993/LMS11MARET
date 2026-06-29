@@ -89,12 +89,38 @@
           <div class="relative bg-[#1E293B] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-7 z-10">
             <div class="text-center mb-6">
               <div class="w-16 h-16 rounded-2xl bg-rose-500/20 flex items-center justify-center text-3xl mx-auto mb-4">
-                🗑️
+                🔒
               </div>
-              <h3 class="text-xl font-black text-white mb-2">Konfirmasi Reset</h3>
+              <h3 class="text-xl font-black text-white mb-2">Konfirmasi Keamanan</h3>
               <p class="text-sm text-slate-400 leading-relaxed">
-                Anda akan menghapus <strong class="text-rose-400">{{ totalDataToDelete.toLocaleString('id-ID') }}</strong> data dari database.
-                Aksi ini <strong class="text-white">tidak dapat dibatalkan</strong>.
+                Untuk keamanan, silakan masukkan password admin Anda **2 kali** untuk memverifikasi tindakan pembersihan data ini.
+              </p>
+            </div>
+
+            <!-- Password Inputs -->
+            <div class="space-y-4 mb-6">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Password Admin</label>
+                <input
+                  v-model="password"
+                  type="password"
+                  placeholder="Masukkan password admin"
+                  class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all placeholder-slate-600"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Konfirmasi Password Admin</label>
+                <input
+                  v-model="passwordConfirmation"
+                  type="password"
+                  placeholder="Masukkan kembali password admin"
+                  class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all placeholder-slate-600"
+                />
+              </div>
+              
+              <!-- Validation Error -->
+              <p v-if="validationError" class="text-xs text-rose-400 font-medium flex items-center gap-1.5">
+                <span>⚠️</span> {{ validationError }}
               </p>
             </div>
 
@@ -107,7 +133,7 @@
               </button>
               <button
                 @click="executeReset"
-                :disabled="isProcessing"
+                :disabled="isProcessing || !password || !passwordConfirmation"
                 class="flex-1 px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl transition-colors text-sm disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <span>{{ isProcessing ? '⏳' : '✓' }}</span>
@@ -132,6 +158,9 @@ const props = defineProps({
 
 const showModal = ref(false);
 const isProcessing = ref(false);
+const password = ref('');
+const passwordConfirmation = ref('');
+const validationError = ref('');
 
 const statItems = computed(() => [
   { icon: '👥', label: 'Siswa', value: props.stats.total_siswa, bgClass: 'bg-blue-500/20' },
@@ -155,12 +184,24 @@ const totalDataToDelete = computed(() => {
 });
 
 const confirmExecute = () => {
+  password.value = '';
+  passwordConfirmation.value = '';
+  validationError.value = '';
   showModal.value = true;
 };
 
 const executeReset = () => {
+  validationError.value = '';
+  
+  if (password.value !== passwordConfirmation.value) {
+    validationError.value = 'Password dan konfirmasi password tidak cocok!';
+    return;
+  }
+
   isProcessing.value = true;
-  router.post('/admin/tahun-ajaran/execute', {}, {
+  router.post('/admin/tahun-ajaran/execute', {
+    password: password.value
+  }, {
     onFinish: () => {
       isProcessing.value = false;
       showModal.value = false;
