@@ -94,6 +94,8 @@ class StudentApiController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
+                'student_name' => $student->nama_siswa,
+                'class_name' => $student->clas->nama_kelas ?? 'Tanpa Kelas',
                 'attendance_pct' => $attendancePct,
                 'details' => [
                     'sakit' => $sakitCount,
