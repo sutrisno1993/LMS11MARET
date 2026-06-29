@@ -27,7 +27,8 @@
           <qrcode-stream 
             v-if="!isProcessing && !successMessage"
             @detect="onDetect" 
-            @init="onInit"
+            @camera-on="onCameraOn"
+            @error="onError"
             :track="paintOutline"
             style="position:absolute;inset:0;width:100%;height:100%;"
           ></qrcode-stream>
@@ -93,25 +94,19 @@ const resetScanner = () => {
   isProcessing.value = false;
 };
 
-const onInit = async (promise) => {
-  // Fallback: paksa loading hilang setelah 3 detik
-  const timeout = setTimeout(() => {
-    isLoading.value = false;
-  }, 3000);
+const onCameraOn = () => {
+  isLoading.value = false;
+};
 
-  try {
-    await promise;
-    isLoading.value = false;
-  } catch (error) {
-    isLoading.value = false;
-    errorMessage.value = 'ERROR: Kamera tidak dapat diakses. Pastikan browser mengizinkan kamera atau akses via HTTPS.';
-    if (error.name === 'NotAllowedError') {
-      errorMessage.value = 'Akses kamera ditolak oleh pengguna.';
-    } else if (error.name === 'NotFoundError') {
-      errorMessage.value = 'Tidak ada perangkat kamera ditemukan.';
-    }
-  } finally {
-    clearTimeout(timeout);
+const onError = (error) => {
+  isLoading.value = false;
+  errorMessage.value = 'ERROR: Kamera tidak dapat diakses. Pastikan browser mengizinkan kamera atau akses via HTTPS.';
+  if (error.name === 'NotAllowedError') {
+    errorMessage.value = 'Akses kamera ditolak oleh pengguna.';
+  } else if (error.name === 'NotFoundError') {
+    errorMessage.value = 'Tidak ada perangkat kamera ditemukan.';
+  } else {
+    errorMessage.value = 'Gagal mengakses kamera: ' + error.message;
   }
 };
 
