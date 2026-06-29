@@ -169,26 +169,6 @@
     <!-- Page content -->
     <main class="flex-1 p-7 relative">
       <slot />
-      
-      <!-- Development Time Widget -->
-      <div v-if="$page.props.app?.is_local_env" class="fixed bottom-6 right-6 z-50">
-        <div class="bg-[#1E293B] border border-white/10 shadow-2xl rounded-2xl p-4 w-72 backdrop-blur-md bg-opacity-95">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-xs font-bold text-white flex items-center gap-2">
-              <span>⏱️</span> Dev Time Control
-            </h3>
-            <span v-if="$page.props.app.is_mock_time" class="bg-indigo-500/20 text-indigo-400 text-[10px] px-2 py-0.5 rounded-full font-bold">MOCKED</span>
-          </div>
-          <p class="text-[11px] text-slate-400 mb-3 font-mono">{{ $page.props.app.current_time }}</p>
-          <form @submit.prevent="updateMockTime" class="space-y-2">
-            <input v-model="mockTimeForm.mock_time" type="datetime-local" step="1" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white" required>
-            <div class="flex gap-2">
-              <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold py-1.5 rounded-lg transition-colors">Set Waktu</button>
-              <button type="button" @click="resetMockTime" v-if="$page.props.app.is_mock_time" class="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-[11px] font-semibold py-1.5 rounded-lg border border-red-500/30 transition-colors">Reset</button>
-            </div>
-          </form>
-        </div>
-      </div>
     </main>
   </div>
 
@@ -417,21 +397,6 @@ const userInitial = computed(() => {
   return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 });
 
-const mockTimeForm = useForm({
-  mock_time: ''
-});
-
-const updateMockTime = () => {
-  mockTimeForm.post('/dev/mock-time', {
-    preserveScroll: true,
-  });
-};
-
-const resetMockTime = () => {
-  useForm({}).post('/dev/reset-time', {
-    preserveScroll: true,
-  });
-};
 
 // Global Toast System Logic
 const toastMessage = ref('');

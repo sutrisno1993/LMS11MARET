@@ -23,20 +23,7 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-// Development Tools
-if (app()->environment(['local', 'development'])) {
-    Route::post('/dev/mock-time', function (\Illuminate\Http\Request $request) {
-        $request->validate(['mock_time' => 'required|date']);
-        $targetTime = strtotime($request->mock_time);
-        $offset = $targetTime - time();
-        \Illuminate\Support\Facades\Cache::put('time_offset', $offset);
-        return back()->with('message', 'Waktu aplikasi berhasil diubah!');
-    });
-    Route::post('/dev/reset-time', function () {
-        \Illuminate\Support\Facades\Cache::forget('time_offset');
-        return back()->with('message', 'Waktu aplikasi dikembalikan ke normal!');
-    });
-}
+
 
 // Auth Routes
 Route::middleware('guest')->group(function () {
