@@ -68,4 +68,51 @@ class DevTimeController extends Controller
 
         return back()->with('success', 'Simulasi waktu direset ke waktu sistem riil.');
     }
+
+    public function bypassScan($id)
+    {
+        if (!app()->environment(['local', 'development'])) {
+            abort(403, 'Unauthorized action in production.');
+        }
+
+        $session = \App\Models\KbmSession::findOrFail($id);
+
+        // Find the first student in this class
+        $siswa = \App\Models\Student::where('id_kelas', $session->id_kelas)->first();
+        if (!$siswa) {
+            return back()->with('error', 'Tidak ada siswa terdaftar di kelas ini untuk simulasi scan.');
+        }
+
+        // Cari semua sesi dalam blok yang sama
+        $blockSessions = \App\Models\KbmSession::where('tanggal', $session->tanggal)
+            ->where('id_kelas', $session->id_kelas)
+            ->where('id_mapel', $session->id_mapel)
+            ->where('id_guru_terjadwal', $session->id_guru_terjadwal)
+            ->get();
+
+        foreach ($blockSessions as $bSession) {
+            $bSession->status_sesi = 'AKTIF';
+            $bSession->status_guru = 'HADIR';
+            $bSession->waktu_scan_masuk = now();
+            $bSession->save();
+
+            // Inisialisasi absensi semua siswa di kelas ini sebagai default HADIR
+            $studentsInClass = \App\Models\Student::where('id_kelas', $bSession->id_kelas)->get();
+            foreach ($studentsInClass as $s) {
+                \App\Models\StudentAttendance::updateOrCreate(
+                    [
+                        'id_kbm_session' => $bSession->id,
+                        'id_siswa' => $s->id_siswa,
+                    ],
+                    [
+                        'status' => 'HADIR',
+                        'metode' => $s->id_siswa === $siswa->id_siswa ? 'SCAN_QR' : 'SYSTEM',
+                        'waktu_presensi' => $s->id_siswa === $siswa->id_siswa ? now() : null,
+                    ]
+                );
+            }
+        }
+
+        return back()->with('success', 'Simulasi scan berhasil! Sesi KBM diaktifkan untuk kelas ini.');
+    }
 }

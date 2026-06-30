@@ -221,5 +221,6 @@ Route::middleware(['auth', 'role:TEACHER'])->prefix('walikelas')->name('walikela
 if (app()->environment(['local', 'development'])) {
     Route::post('/dev/time/update', [\App\Http\Controllers\DevTimeController::class, 'update'])->name('dev.time.update');
     Route::post('/dev/time/reset', [\App\Http\Controllers\DevTimeController::class, 'reset'])->name('dev.time.reset');
+    Route::post('/dev/kbm-session/{id}/bypass-scan', [\App\Http\Controllers\DevTimeController::class, 'bypassScan'])->name('dev.kbm-session.bypass-scan');
 }
 

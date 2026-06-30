@@ -85,6 +85,18 @@
             </div>
             <div class="text-xs text-slate-500 mt-1">Token kedaluwarsa dalam</div>
           </div>
+
+          <!-- Dev mode bypass button -->
+          <div v-if="$page.props.app?.is_local_env" class="mt-5 pt-4 border-t border-white/5">
+            <button 
+              @click="bypassScan"
+              :disabled="isBypassing"
+              class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:-translate-y-0.5 disabled:-translate-y-0 flex items-center justify-center gap-1.5"
+            >
+              <span v-if="isBypassing" class="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></span>
+              ⚡ Simulasi Scan Siswa (Bypass QR)
+            </button>
+          </div>
         </div>
 
         <!-- Jurnal Pembelajaran (Hanya tampil jika AKTIF) -->
@@ -327,6 +339,19 @@ const countdownDisplay = computed(() => {
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 });
 const countdownPct = computed(() => (countdownSecs.value / 900) * 100);
+
+const isBypassing = ref(false);
+const bypassScan = () => {
+  isBypassing.value = true;
+  router.post(`/dev/kbm-session/${props.sessionId}/bypass-scan`, {}, {
+    onSuccess: () => {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'KBM berhasil diaktifkan via simulasi scan!', type: 'success' } }));
+    },
+    onFinish: () => {
+      isBypassing.value = false;
+    }
+  });
+};
 
 let statusPollingInterval = null;
 
