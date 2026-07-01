@@ -41,23 +41,35 @@
             </div>
             <div class="pt-1">
               <p class="text-sm text-white leading-relaxed">{{ q.pertanyaan }}</p>
+              
+              <!-- Question Image -->
+              <div v-if="q.gambar_pertanyaan" class="mt-2">
+                <img :src="q.gambar_pertanyaan" class="max-h-48 rounded-xl object-contain border border-white/5 bg-black/20 p-1">
+              </div>
             </div>
           </div>
 
           <!-- Opsi Jawaban -->
           <div class="pl-11 space-y-2">
             <label v-for="opt in ['A','B','C','D','E']" :key="opt" 
-                   class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200"
+                   class="flex flex-col gap-2 p-3 rounded-xl border cursor-pointer transition-all duration-200"
                    :class="myAnswers[q.id_question] === opt ? 'bg-indigo-500/10 border-indigo-500/50 shadow-[inset_0_0_15px_rgba(79,70,229,0.1)]' : 'bg-black/20 border-white/5 hover:border-white/20 hover:bg-black/40'">
-              <div class="pt-0.5">
-                <input type="radio" :name="`q_${q.id_question}`" :value="opt" 
-                       v-model="myAnswers[q.id_question]" 
-                       @change="submitAnswer(q.id_question, opt)"
-                       class="w-4 h-4 text-indigo-500 bg-transparent border-white/20 focus:ring-0 focus:ring-offset-0">
+              <div class="flex items-start gap-3">
+                <div class="pt-0.5">
+                  <input type="radio" :name="`q_${q.id_question}`" :value="opt" 
+                         v-model="myAnswers[q.id_question]" 
+                         @change="submitAnswer(q.id_question, opt)"
+                         class="w-4 h-4 text-indigo-500 bg-transparent border-white/20 focus:ring-0 focus:ring-offset-0">
+                </div>
+                <div class="flex-1 text-sm">
+                  <span class="font-bold text-slate-400 mr-2">{{ opt }}.</span>
+                  <span :class="myAnswers[q.id_question] === opt ? 'text-white font-medium' : 'text-slate-300'">{{ q[`opsi_${opt.toLowerCase()}`] }}</span>
+                </div>
               </div>
-              <div class="flex-1 text-sm">
-                <span class="font-bold text-slate-400 mr-2">{{ opt }}.</span>
-                <span :class="myAnswers[q.id_question] === opt ? 'text-white font-medium' : 'text-slate-300'">{{ q[`opsi_${opt.toLowerCase()}`] }}</span>
+
+              <!-- Option Image -->
+              <div v-if="q[`gambar_opsi_${opt.toLowerCase()}`]" class="ml-7 mt-1">
+                <img :src="q[`gambar_opsi_${opt.toLowerCase()}`]" class="max-h-24 rounded-lg object-contain border border-white/5 bg-black/20 p-1">
               </div>
             </label>
           </div>
